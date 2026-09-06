@@ -1,6 +1,6 @@
 {
     "name": "ibkr-reporting",
-    "compatibility_date": "2026-09-06",
+    "compatibility_date": "2024-09-01",
     "assets": {
         "directory": "./public"
     }

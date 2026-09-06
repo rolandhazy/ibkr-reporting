@@ -13,9 +13,36 @@ IBKR_QUERY_ID = os.getenv("IBKR_QUERY_ID")
 CACHE_FILE = "flex_report_cache.xml"
 CACHE_MAX_AGE_SECONDS = 86400  # 1 day
 
+REQUEST_TIMEOUT = (10.0, 30.0)  # (connect_timeout, read_timeout)
+MAX_SEND_RETRIES = 3
+MAX_POLL_ATTEMPTS = 15
+
+
+def _send_request_with_retry(url: str, headers: dict) -> requests.Response:
+    """Send initial request to IBKR Flex Web Service with retry on 5xx and connection errors."""
+    for attempt in range(1, MAX_SEND_RETRIES + 1):
+        try:
+            res = requests.get(url, headers=headers, timeout=REQUEST_TIMEOUT)
+            if res.status_code in (500, 502, 503, 504):
+                if attempt < MAX_SEND_RETRIES:
+                    wait_time = 2.0 * attempt
+                    print(f"IBKR returned HTTP {res.status_code}. Retrying initial request ({attempt}/{MAX_SEND_RETRIES}) in {wait_time}s...")
+                    time.sleep(wait_time)
+                    continue
+            res.raise_for_status()
+            return res
+        except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
+            if attempt < MAX_SEND_RETRIES:
+                wait_time = 2.0 * attempt
+                print(f"Network error ({e}). Retrying initial request ({attempt}/{MAX_SEND_RETRIES}) in {wait_time}s...")
+                time.sleep(wait_time)
+            else:
+                raise
+    raise RuntimeError("Failed to send Flex request after multiple retries.")
+
 
 def fetch_flex_report(token: str | None = None, query_id: str | None = None) -> str:
-    """Fetch report from IBKR Flex Web Service and poll until generated with exponential backoff."""
+    """Fetch report from IBKR Flex Web Service and poll until generated with exponential backoff and 5xx retries."""
     token = token or IBKR_FLEX_TOKEN
     query_id = query_id or IBKR_QUERY_ID
 
@@ -28,9 +55,8 @@ def fetch_flex_report(token: str | None = None, query_id: str | None = None) -> 
     )
 
     headers = {"User-Agent": "Mozilla/5.0"}
-    res = requests.get(flex_send_url, headers=headers)
+    res = _send_request_with_retry(flex_send_url, headers=headers)
     print(f"Flex request initiated (HTTP {res.status_code})")
-    res.raise_for_status()
     root = ET.fromstring(res.text)
 
     if root.findtext("Status") != "Success":
@@ -46,13 +72,27 @@ def fetch_flex_report(token: str | None = None, query_id: str | None = None) -> 
     get_url = f"{base_get_url}?q={ref_code}&t={token}&v=3"
     print(f"Flex statement request accepted (Reference: {ref_code}). Polling for completion...")
 
-    for attempt in range(1, 15):
+    consecutive_5xx = 0
+    for attempt in range(1, MAX_POLL_ATTEMPTS + 1):
         sleep_time = min(30.0, 5.0 * (1.5 ** attempt))
-        print(f"Waiting {sleep_time:.1f}s before polling attempt {attempt}/14...")
+        print(f"Waiting {sleep_time:.1f}s before polling attempt {attempt}/{MAX_POLL_ATTEMPTS}...")
         time.sleep(sleep_time)
 
-        stmt_res = requests.get(get_url, headers=headers)
-        print(f"Polling attempt {attempt}/14 completed (HTTP {stmt_res.status_code})")
+        try:
+            stmt_res = requests.get(get_url, headers=headers, timeout=REQUEST_TIMEOUT)
+            print(f"Polling attempt {attempt}/{MAX_POLL_ATTEMPTS} completed (HTTP {stmt_res.status_code})")
+        except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
+            print(f"Network error on polling attempt {attempt}/{MAX_POLL_ATTEMPTS}: {e}. Retrying...")
+            continue
+
+        if stmt_res.status_code in (500, 502, 503, 504):
+            consecutive_5xx += 1
+            print(f"Warning: IBKR server error HTTP {stmt_res.status_code} on attempt {attempt}/{MAX_POLL_ATTEMPTS} ({consecutive_5xx} in a row).")
+            if consecutive_5xx >= 5:
+                raise RuntimeError(f"IBKR Flex Service continuously unavailable (HTTP {stmt_res.status_code}).")
+            continue
+        else:
+            consecutive_5xx = 0
 
         if stmt_res.status_code == 200:
             if "<FlexQueryResponse" in stmt_res.text or "<FlexStatements" in stmt_res.text:
@@ -65,9 +105,9 @@ def fetch_flex_report(token: str | None = None, query_id: str | None = None) -> 
                 err_msg = err_root.findtext("ErrorMessage")
                 if err_code != "1019":  # 1019 = in progress
                     raise RuntimeError(f"IBKR Error ({err_code}): {err_msg}")
-                print(f"Statement still generating... (attempt {attempt}/14)")
+                print(f"Statement still generating... (attempt {attempt}/{MAX_POLL_ATTEMPTS})")
         else:
-            print(f"Warning: Non-200 HTTP response received: {stmt_res.status_code}")
+            print(f"Warning: Unexpected HTTP response received: {stmt_res.status_code}")
 
     raise TimeoutError("IBKR Flex Statement generation timed out.")
 
