@@ -15,7 +15,7 @@ CACHE_MAX_AGE_SECONDS = 86400  # 1 day
 
 
 def fetch_flex_report(token: str | None = None, query_id: str | None = None) -> str:
-    """Fetch report from IBKR Flex Web Service and poll until generated."""
+    """Fetch report from IBKR Flex Web Service and poll until generated with exponential backoff."""
     token = token or IBKR_FLEX_TOKEN
     query_id = query_id or IBKR_QUERY_ID
 
@@ -29,6 +29,7 @@ def fetch_flex_report(token: str | None = None, query_id: str | None = None) -> 
 
     headers = {"User-Agent": "Mozilla/5.0"}
     res = requests.get(flex_send_url, headers=headers)
+    print(f"Flex request initiated (HTTP {res.status_code})")
     res.raise_for_status()
     root = ET.fromstring(res.text)
 
@@ -46,19 +47,27 @@ def fetch_flex_report(token: str | None = None, query_id: str | None = None) -> 
     print(f"Flex statement request accepted (Reference: {ref_code}). Polling for completion...")
 
     for attempt in range(1, 15):
-        time.sleep(10)
-        stmt_res = requests.get(get_url, headers=headers)
-        if "<FlexQueryResponse" in stmt_res.text or "<FlexStatements" in stmt_res.text:
-            print("Flex statement successfully retrieved.")
-            return stmt_res.text
+        sleep_time = min(30.0, 5.0 * (1.5 ** attempt))
+        print(f"Waiting {sleep_time:.1f}s before polling attempt {attempt}/14...")
+        time.sleep(sleep_time)
 
-        if "<ErrorCode>" in stmt_res.text:
-            err_root = ET.fromstring(stmt_res.text)
-            err_code = err_root.findtext("ErrorCode")
-            err_msg = err_root.findtext("ErrorMessage")
-            if err_code != "1019":  # 1019 = in progress
-                raise RuntimeError(f"IBKR Error ({err_code}): {err_msg}")
-            print(f"Statement still generating... (attempt {attempt}/14)")
+        stmt_res = requests.get(get_url, headers=headers)
+        print(f"Polling attempt {attempt}/14 completed (HTTP {stmt_res.status_code})")
+
+        if stmt_res.status_code == 200:
+            if "<FlexQueryResponse" in stmt_res.text or "<FlexStatements" in stmt_res.text:
+                print("Flex statement successfully retrieved.")
+                return stmt_res.text
+
+            if "<ErrorCode>" in stmt_res.text:
+                err_root = ET.fromstring(stmt_res.text)
+                err_code = err_root.findtext("ErrorCode")
+                err_msg = err_root.findtext("ErrorMessage")
+                if err_code != "1019":  # 1019 = in progress
+                    raise RuntimeError(f"IBKR Error ({err_code}): {err_msg}")
+                print(f"Statement still generating... (attempt {attempt}/14)")
+        else:
+            print(f"Warning: Non-200 HTTP response received: {stmt_res.status_code}")
 
     raise TimeoutError("IBKR Flex Statement generation timed out.")
 

@@ -5,7 +5,11 @@ import os
 import pandas as pd
 
 
-def generate_html_report(df: pd.DataFrame, output_path: str = "public/index.html") -> None:
+def generate_html_report(
+    df: pd.DataFrame,
+    output_path: str = "public/index.html",
+    period_str: str = ""
+) -> None:
     """Aggregate portfolio data and output the standalone interactive dashboard HTML."""
     theme_summary = df.groupby('Theme').agg(
         TotalFifoPnl=('TotalFifoPnl', 'sum'),
@@ -50,6 +54,8 @@ def generate_html_report(df: pd.DataFrame, output_path: str = "public/index.html
     pnl_cls = "positive" if total_pnl >= 0 else "negative"
     realized_cls = "positive" if total_realized >= 0 else "negative"
     unrealized_cls = "positive" if total_unrealized >= 0 else "negative"
+
+    period_badge_html = f'<div class="reporting-period">{period_str}</div>' if period_str else ""
 
     html = f"""<!DOCTYPE html>
 <html lang="en">
@@ -117,6 +123,12 @@ def generate_html_report(df: pd.DataFrame, output_path: str = "public/index.html
             gap: 10px;
         }}
 
+        .brand-container {{
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }}
+
         .brand {{
             display: flex;
             align-items: center;
@@ -128,6 +140,15 @@ def generate_html_report(df: pd.DataFrame, output_path: str = "public/index.html
             font-weight: 700;
             letter-spacing: -0.02em;
             color: var(--text-primary);
+        }}
+
+        .reporting-period {{
+            font-size: 11px;
+            font-family: var(--font-mono);
+            color: var(--text-secondary);
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
         }}
 
         .kpi-strip {{
@@ -413,37 +434,6 @@ def generate_html_report(df: pd.DataFrame, output_path: str = "public/index.html
             }}
         }}
 
-        /* Controls / Metric Toggle */
-        .view-controls {{
-            display: flex;
-            gap: 4px;
-            background: #0b1120;
-            padding: 2px;
-            border-radius: 6px;
-            border: 1px solid var(--border-color);
-        }}
-
-        .btn-toggle {{
-            background: transparent;
-            border: none;
-            color: var(--text-secondary);
-            font-size: 11px;
-            font-weight: 600;
-            padding: 4px 9px;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: all 0.15s;
-        }}
-
-        .btn-toggle:hover {{
-            color: var(--text-primary);
-        }}
-
-        .btn-toggle.active {{
-            background: var(--color-accent);
-            color: #0b1120;
-        }}
-
         .btn-back-mobile {{
             display: none;
             background: #1e293b;
@@ -462,9 +452,47 @@ def generate_html_report(df: pd.DataFrame, output_path: str = "public/index.html
             }}
         }}
 
-        /* Chart container */
+        /* Chart legend & wrapper */
+        .chart-legend {{
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 14px;
+            padding: 9px 14px 2px 14px;
+            font-size: 11px;
+            color: var(--text-secondary);
+            flex-wrap: wrap;
+        }}
+
+        .legend-item {{
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }}
+
+        .legend-swatch {{
+            width: 14px;
+            height: 9px;
+            border-radius: 2px;
+            display: inline-block;
+        }}
+
+        .legend-swatch.realized-swatch {{
+            background: linear-gradient(90deg, #15803d 50%, #b91c1c 50%);
+        }}
+
+        .legend-swatch.unrealized-swatch {{
+            background: linear-gradient(90deg, #4ade80 50%, #f87171 50%);
+        }}
+
+        .legend-diamond {{
+            color: #10b981;
+            font-size: 11px;
+            line-height: 1;
+        }}
+
         .chart-wrapper {{
-            padding: 8px 6px;
+            padding: 4px 6px 8px 6px;
             min-height: 280px;
             display: flex;
             align-items: center;
@@ -529,9 +557,12 @@ def generate_html_report(df: pd.DataFrame, output_path: str = "public/index.html
     <div class="container">
         <!-- Concise Header & KPI Strip -->
         <header class="header">
-            <div class="brand">
-                <h1>IBKR Intelligence</h1>
-                <span class="badge neutral">EUR</span>
+            <div class="brand-container">
+                <div class="brand">
+                    <h1>IBKR Intelligence</h1>
+                    <span class="badge neutral">EUR</span>
+                </div>
+                {period_badge_html}
             </div>
             <div class="kpi-strip">
                 <div class="kpi-item">
@@ -627,11 +658,13 @@ def generate_html_report(df: pd.DataFrame, output_path: str = "public/index.html
                             <span id="theme-pnl-pill" class="badge"></span>
                             <span id="theme-asset-pill" class="badge neutral"></span>
                         </div>
-                        <div class="view-controls">
-                            <button class="btn-toggle active" id="btn-metric-TotalFifoPnl" onclick="changeMetric('TotalFifoPnl')">Net</button>
-                            <button class="btn-toggle" id="btn-metric-RealizedPnl" onclick="changeMetric('RealizedPnl')">Realized</button>
-                            <button class="btn-toggle" id="btn-metric-UnrealizedPnl" onclick="changeMetric('UnrealizedPnl')">Unrealized</button>
-                        </div>
+                    </div>
+
+                    <!-- Legend -->
+                    <div class="chart-legend">
+                        <span class="legend-item"><span class="legend-swatch realized-swatch"></span> Realized</span>
+                        <span class="legend-item"><span class="legend-swatch unrealized-swatch"></span> Unrealized</span>
+                        <span class="legend-item"><span class="legend-diamond">◆</span> Net PnL</span>
                     </div>
                     
                     <!-- Plotly Chart -->
@@ -667,13 +700,6 @@ def generate_html_report(df: pd.DataFrame, output_path: str = "public/index.html
         const TICKER_DATA = {ticker_json};
 
         let currentTheme = "{top_theme}";
-        let currentMetric = "TotalFifoPnl";
-
-        const METRIC_LABELS = {{
-            "TotalFifoPnl": "Net FIFO PnL (€)",
-            "RealizedPnl": "Realized PnL (€)",
-            "UnrealizedPnl": "Unrealized PnL (€)"
-        }};
 
         function escapeHtml(s) {{
             return String(s == null ? '' : s).replace(/[&<>"']/g, c => (
@@ -711,15 +737,6 @@ def generate_html_report(df: pd.DataFrame, output_path: str = "public/index.html
             document.getElementById('themes-card').scrollIntoView({{ behavior: 'smooth', block: 'start' }});
         }}
 
-        function changeMetric(metricKey) {{
-            currentMetric = metricKey;
-            document.querySelectorAll('.btn-toggle').forEach(b => b.classList.remove('active'));
-            const activeBtn = document.getElementById('btn-metric-' + metricKey);
-            if (activeBtn) activeBtn.classList.add('active');
-
-            renderActiveTheme();
-        }}
-
         function renderActiveTheme() {{
             const themeObj = THEME_DATA.find(t => t.Theme === currentTheme) || {{
                 Theme: currentTheme,
@@ -742,8 +759,8 @@ def generate_html_report(df: pd.DataFrame, output_path: str = "public/index.html
             // Filter tickers for active theme
             const tickers = TICKER_DATA.filter(t => t.Theme === currentTheme);
 
-            // Sort ascending for horizontal bar chart (so largest is at top)
-            const sortedTickers = [...tickers].sort((a, b) => a[currentMetric] - b[currentMetric]);
+            // Sort ascending by Total FIFO PnL so the highest net earner appears at the top
+            const sortedTickers = [...tickers].sort((a, b) => a.TotalFifoPnl - b.TotalFifoPnl);
 
             // Render Plotly Chart
             renderPlotlyChart(sortedTickers);
@@ -760,59 +777,84 @@ def generate_html_report(df: pd.DataFrame, output_path: str = "public/index.html
             }}
 
             const isMobile = window.innerWidth <= 640;
+            const ySymbols = tickers.map(t => t.UnderlyingSymbol);
+            const descriptions = tickers.map(t => t.Description);
 
-            const yValues = tickers.map(t => t.UnderlyingSymbol);
-            const xValues = tickers.map(t => t[currentMetric]);
-            const colors = xValues.map(v => v >= 0 ? '#10b981' : '#f43f5e');
-            const textLabels = xValues.map(v => formatCurrency(v));
-
-            const customData = tickers.map(t => [
-                t.Description,
-                t.TotalFifoPnl,
-                t.RealizedPnl,
-                t.UnrealizedPnl
-            ]);
-
-            const trace = {{
+            // Realized: Dark Green if >= 0, Dark Red if < 0
+            const traceRealized = {{
                 type: 'bar',
                 orientation: 'h',
-                y: yValues,
-                x: xValues,
-                text: textLabels,
-                textposition: 'outside',
-                cliponaxis: false,
+                name: 'Realized',
+                y: ySymbols,
+                x: tickers.map(t => t.RealizedPnl),
                 marker: {{
-                    color: colors,
+                    color: tickers.map(t => t.RealizedPnl >= 0 ? '#15803d' : '#b91c1c'),
                     line: {{ width: 0 }}
                 }},
-                customdata: customData,
-                hovertemplate: 
-                    '<b>%{{y}}</b> — %{{customdata[0]}}<br>' +
-                    'Selected: <b>%{{x:€,.2f}}</b><br>' +
-                    '<span style="color:#94a3b8">Net:</span> €%{{customdata[1]:,.2f}}<br>' +
-                    '<span style="color:#94a3b8">Realized:</span> €%{{customdata[2]:,.2f}}<br>' +
-                    '<span style="color:#94a3b8">Unrealized:</span> €%{{customdata[3]:,.2f}}<extra></extra>'
+                customdata: descriptions,
+                hovertemplate: '<b>%{{y}}</b> (%{{customdata}})<br>Realized: <b>€%{{x:,.2f}}</b><extra></extra>'
             }};
 
-            // Calculate padded x-axis range so outside bar labels never overlap the y-axis or border
-            const minVal = Math.min(0, ...xValues);
-            const maxVal = Math.max(0, ...xValues);
-            const span = (maxVal - minVal) || 100;
-            const padLeft = minVal < 0 ? Math.abs(minVal) * 0.28 + span * 0.05 : span * 0.05;
-            const padRight = maxVal > 0 ? maxVal * 0.28 + span * 0.05 : span * 0.15;
-            const xRange = [minVal - padLeft, maxVal + padRight];
+            // Unrealized: Light Green if >= 0, Light Red if < 0
+            const traceUnrealized = {{
+                type: 'bar',
+                orientation: 'h',
+                name: 'Unrealized',
+                y: ySymbols,
+                x: tickers.map(t => t.UnrealizedPnl),
+                marker: {{
+                    color: tickers.map(t => t.UnrealizedPnl >= 0 ? '#4ade80' : '#f87171'),
+                    line: {{ width: 0 }}
+                }},
+                customdata: descriptions,
+                hovertemplate: '<b>%{{y}}</b> (%{{customdata}})<br>Unrealized: <b>€%{{x:,.2f}}</b><extra></extra>'
+            }};
 
-            const barSpacing = isMobile ? 26 : 32;
-            const dynamicHeight = Math.max(isMobile ? 260 : 320, Math.min(isMobile ? 550 : 700, tickers.length * barSpacing + 50));
+            // Subtle diamond marker representing the Net PnL total
+            const traceNet = {{
+                type: 'scatter',
+                mode: 'markers',
+                orientation: 'h',
+                name: 'Net PnL',
+                y: ySymbols,
+                x: tickers.map(t => t.TotalFifoPnl),
+                marker: {{
+                    symbol: 'diamond',
+                    size: isMobile ? 8 : 10,
+                    color: tickers.map(t => t.TotalFifoPnl >= 0 ? '#10b981' : '#f43f5e'),
+                    line: {{
+                        color: '#ffffff',
+                        width: 1.5
+                    }}
+                }},
+                customdata: descriptions,
+                hovertemplate: '<b>%{{y}}</b> (%{{customdata}})<br>Net PnL: <b>€%{{x:,.2f}}</b><extra></extra>'
+            }};
+
+            // Calculate x-axis bounds considering stacked extremities and net points
+            const stackedPos = tickers.map(t => Math.max(0, t.RealizedPnl) + Math.max(0, t.UnrealizedPnl));
+            const stackedNeg = tickers.map(t => Math.min(0, t.RealizedPnl) + Math.min(0, t.UnrealizedPnl));
+            const netVals = tickers.map(t => t.TotalFifoPnl);
+
+            const minVal = Math.min(0, ...stackedNeg, ...netVals);
+            const maxVal = Math.max(0, ...stackedPos, ...netVals);
+            const span = (maxVal - minVal) || 100;
+            const xRange = [minVal - span * 0.08, maxVal + span * 0.08];
+
+            const barHeight = isMobile ? 24 : 28;
+            const dynamicHeight = Math.max(isMobile ? 260 : 300, Math.min(isMobile ? 650 : 800, tickers.length * barHeight + 70));
 
             const layout = {{
+                barmode: 'relative',
+                bargap: 0.32,
                 height: dynamicHeight,
                 margin: {{ 
                     l: isMobile ? 65 : 85, 
-                    r: isMobile ? 65 : 85, 
-                    t: 10, 
+                    r: 20, 
+                    t: 15, 
                     b: 30 
                 }},
+                showlegend: false,
                 paper_bgcolor: 'rgba(0,0,0,0)',
                 plot_bgcolor: 'rgba(0,0,0,0)',
                 font: {{
@@ -822,10 +864,6 @@ def generate_html_report(df: pd.DataFrame, output_path: str = "public/index.html
                 }},
                 xaxis: {{
                     range: xRange,
-                    title: {{
-                        text: METRIC_LABELS[currentMetric],
-                        font: {{ size: 11, color: '#64748b' }}
-                    }},
                     gridcolor: '#1e293b',
                     zerolinecolor: '#475569',
                     zerolinewidth: 1.5,
@@ -850,7 +888,7 @@ def generate_html_report(df: pd.DataFrame, output_path: str = "public/index.html
                 displayModeBar: false
             }};
 
-            Plotly.react('ticker-chart', [trace], layout, config);
+            Plotly.react('ticker-chart', [traceRealized, traceUnrealized, traceNet], layout, config);
         }}
 
         function renderSubTable(tickers) {{
