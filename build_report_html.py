@@ -855,11 +855,19 @@ def generate_html_report(df):
                     '<span style="color:#94a3b8">Unrealized:</span> €%{{customdata[3]:,.2f}}<extra></extra>'
             }};
 
+            // Calculate padded x-axis range so outside bar labels never overlap the y-axis or border
+            const minVal = Math.min(0, ...xValues);
+            const maxVal = Math.max(0, ...xValues);
+            const span = (maxVal - minVal) || 100;
+            const padLeft = minVal < 0 ? Math.abs(minVal) * 0.28 + span * 0.05 : span * 0.05;
+            const padRight = maxVal > 0 ? maxVal * 0.28 + span * 0.05 : span * 0.15;
+            const xRange = [minVal - padLeft, maxVal + padRight];
+
             const dynamicHeight = Math.max(380, Math.min(800, tickers.length * 36 + 80));
 
             const layout = {{
                 height: dynamicHeight,
-                margin: {{ l: 70, r: 85, t: 20, b: 40 }},
+                margin: {{ l: 85, r: 85, t: 20, b: 40 }},
                 paper_bgcolor: 'rgba(0,0,0,0)',
                 plot_bgcolor: 'rgba(0,0,0,0)',
                 font: {{
@@ -868,6 +876,7 @@ def generate_html_report(df):
                     size: 12
                 }},
                 xaxis: {{
+                    range: xRange,
                     title: {{
                         text: METRIC_LABELS[currentMetric],
                         font: {{ size: 12, color: '#64748b' }}
@@ -880,6 +889,7 @@ def generate_html_report(df):
                 }},
                 yaxis: {{
                     automargin: true,
+                    ticksuffix: '  ',
                     tickfont: {{
                         family: 'JetBrains Mono, monospace',
                         size: 12,
