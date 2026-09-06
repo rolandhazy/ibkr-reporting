@@ -200,9 +200,9 @@ def generate_html_report(df):
         :root {{
             --bg-page: #090d16;
             --bg-card: #111827;
-            --bg-card-header: #172033;
-            --border-color: #1f293d;
-            --border-subtle: #1a2333;
+            --bg-card-header: #151d30;
+            --border-color: #1e293b;
+            --border-subtle: #182235;
             --text-primary: #f8fafc;
             --text-secondary: #94a3b8;
             --text-muted: #64748b;
@@ -226,134 +226,145 @@ def generate_html_report(df):
             font-family: var(--font-main);
             background: var(--bg-page);
             color: var(--text-primary);
-            padding: 24px;
-            line-height: 1.5;
+            padding: 14px;
+            line-height: 1.4;
             -webkit-font-smoothing: antialiased;
         }}
 
+        @media (max-width: 768px) {{
+            body {{
+                padding: 8px 6px;
+            }}
+        }}
+
         .container {{
-            max-width: 1680px;
+            max-width: 1600px;
             margin: 0 auto;
         }}
 
-        /* Header & KPIs */
+        /* Concise Header & KPI Strip */
         .header {{
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 24px;
+            margin-bottom: 12px;
             flex-wrap: wrap;
-            gap: 16px;
-        }}
-
-        .title-group h1 {{
-            font-size: 24px;
-            font-weight: 700;
-            letter-spacing: -0.02em;
-            color: var(--text-primary);
-            display: flex;
-            align-items: center;
             gap: 10px;
         }}
 
-        .title-group p {{
-            color: var(--text-secondary);
-            font-size: 14px;
-            margin-top: 4px;
+        .brand {{
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }}
 
-        .kpi-grid {{
+        .brand h1 {{
+            font-size: 17px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            color: var(--text-primary);
+        }}
+
+        .kpi-strip {{
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 16px;
-            margin-bottom: 24px;
-        }}
-
-        .kpi-card {{
+            grid-template-columns: repeat(4, auto);
+            gap: 12px 18px;
             background: var(--bg-card);
             border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 18px 20px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            transition: border-color 0.2s;
+            border-radius: 10px;
+            padding: 7px 16px;
+            align-items: center;
         }}
 
-        .kpi-card:hover {{
-            border-color: #334155;
+        @media (max-width: 840px) {{
+            .header {{
+                flex-direction: column;
+                align-items: stretch;
+                gap: 8px;
+            }}
+            .brand {{
+                justify-content: space-between;
+            }}
+            .kpi-strip {{
+                grid-template-columns: repeat(2, 1fr);
+                gap: 8px 12px;
+                padding: 8px 12px;
+            }}
+        }}
+
+        .kpi-item {{
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
         }}
 
         .kpi-label {{
-            font-size: 13px;
-            font-weight: 500;
-            color: var(--text-secondary);
+            font-size: 10px;
             text-transform: uppercase;
             letter-spacing: 0.05em;
-        }}
-
-        .kpi-value {{
-            font-family: var(--font-mono);
-            font-size: 24px;
-            font-weight: 700;
-        }}
-
-        .kpi-sub {{
-            font-size: 12px;
             color: var(--text-muted);
+            font-weight: 600;
         }}
 
-        /* Main 2-Column Split Layout */
+        .kpi-val {{
+            font-family: var(--font-mono);
+            font-size: 14px;
+            font-weight: 700;
+            white-space: nowrap;
+        }}
+
+        /* Main 2-Column Split Dashboard */
         .dashboard-grid {{
             display: grid;
-            grid-template-columns: 46% 54%;
-            gap: 24px;
+            grid-template-columns: 44% 56%;
+            gap: 14px;
             align-items: start;
         }}
 
-        @media (max-width: 1200px) {{
+        @media (max-width: 960px) {{
             .dashboard-grid {{
                 grid-template-columns: 1fr;
+                gap: 12px;
             }}
         }}
 
         .card {{
             background: var(--bg-card);
             border: 1px solid var(--border-color);
-            border-radius: 14px;
+            border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.35);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
         }}
 
         .card-header {{
             background: var(--bg-card-header);
-            padding: 16px 20px;
+            padding: 9px 14px;
             border-bottom: 1px solid var(--border-color);
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 8px;
             flex-wrap: wrap;
-            gap: 12px;
         }}
 
         .card-header h2 {{
-            font-size: 16px;
+            font-size: 13px;
             font-weight: 600;
             color: var(--text-primary);
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
         }}
 
         .badge {{
             display: inline-flex;
             align-items: center;
-            padding: 3px 9px;
+            padding: 2px 7px;
             border-radius: 9999px;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 600;
             font-family: var(--font-mono);
+            line-height: 1.2;
         }}
 
         .badge.positive {{
@@ -376,7 +387,7 @@ def generate_html_report(df):
 
         /* Search input */
         .search-box {{
-            padding: 12px 18px;
+            padding: 8px 12px;
             border-bottom: 1px solid var(--border-subtle);
             background: rgba(17, 24, 39, 0.6);
         }}
@@ -385,10 +396,10 @@ def generate_html_report(df):
             width: 100%;
             background: #0b1120;
             border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 8px 14px;
+            border-radius: 6px;
+            padding: 6px 10px;
             color: var(--text-primary);
-            font-size: 13px;
+            font-size: 12px;
             font-family: var(--font-main);
             outline: none;
             transition: border-color 0.2s, box-shadow 0.2s;
@@ -396,19 +407,20 @@ def generate_html_report(df):
 
         .search-box input:focus {{
             border-color: var(--color-accent);
-            box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+            box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.15);
         }}
 
-        /* Theme Table */
+        /* Table Design */
         .table-container {{
-            max-height: 720px;
+            max-height: 640px;
             overflow-y: auto;
+            position: relative;
         }}
 
         table {{
             width: 100%;
             border-collapse: collapse;
-            font-size: 13px;
+            font-size: 12px;
         }}
 
         thead th {{
@@ -418,20 +430,24 @@ def generate_html_report(df):
             color: var(--text-secondary);
             font-weight: 600;
             text-align: left;
-            padding: 10px 14px;
+            padding: 8px 10px;
             border-bottom: 1px solid var(--border-color);
             z-index: 2;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
         }}
 
         tbody td {{
-            padding: 11px 14px;
+            padding: 9px 10px;
             border-bottom: 1px solid var(--border-subtle);
             color: var(--text-secondary);
+            vertical-align: middle;
         }}
 
         .theme-row {{
             cursor: pointer;
-            transition: background 0.15s ease, border-left 0.15s ease;
+            transition: background 0.12s ease;
             border-left: 3px solid transparent;
         }}
 
@@ -454,23 +470,21 @@ def generate_html_report(df):
             font-weight: 600;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
         }}
 
         .theme-indicator {{
-            width: 8px;
-            height: 8px;
+            width: 7px;
+            height: 7px;
             border-radius: 50%;
-            display: inline-block;
-        }}
-
-        .mono {{
-            font-family: var(--font-mono);
+            flex-shrink: 0;
         }}
 
         .num {{
             text-align: right;
             font-family: var(--font-mono);
+            font-size: 12px;
+            white-space: nowrap;
         }}
 
         .positive {{
@@ -484,34 +498,63 @@ def generate_html_report(df):
         tfoot .total-row {{
             position: sticky;
             bottom: 0;
-            background: #0f172a;
+            background: #0d1527;
             border-top: 2px solid #334155;
             z-index: 2;
         }}
 
         tfoot .total-row td {{
-            padding: 12px 14px;
+            padding: 10px 10px;
             color: var(--text-primary);
             font-weight: 700;
-            background: #0f172a;
+            background: #0d1527;
+        }}
+
+        /* Mobile Column Hiding to Prevent Cramping */
+        @media (max-width: 640px) {{
+            .col-hide-mobile {{
+                display: none !important;
+            }}
+            .table-container {{
+                max-height: 480px;
+            }}
+            tbody td, thead th, tfoot .total-row td {{
+                padding: 7px 7px !important;
+                font-size: 11px !important;
+            }}
+            .num {{
+                font-size: 11px !important;
+            }}
+            .theme-name-cell span {{
+                max-width: 150px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }}
         }}
 
         /* Right Sticky Panel */
         .sticky-panel {{
             position: sticky;
-            top: 20px;
+            top: 14px;
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 14px;
+        }}
+
+        @media (max-width: 960px) {{
+            .sticky-panel {{
+                position: static;
+            }}
         }}
 
         /* Controls / Metric Toggle */
         .view-controls {{
             display: flex;
-            gap: 6px;
+            gap: 4px;
             background: #0b1120;
-            padding: 3px;
-            border-radius: 8px;
+            padding: 2px;
+            border-radius: 6px;
             border: 1px solid var(--border-color);
         }}
 
@@ -519,12 +562,12 @@ def generate_html_report(df):
             background: transparent;
             border: none;
             color: var(--text-secondary);
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 600;
-            padding: 5px 12px;
-            border-radius: 6px;
+            padding: 4px 9px;
+            border-radius: 4px;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.15s;
         }}
 
         .btn-toggle:hover {{
@@ -536,10 +579,28 @@ def generate_html_report(df):
             color: #0b1120;
         }}
 
+        .btn-back-mobile {{
+            display: none;
+            background: #1e293b;
+            color: var(--color-accent);
+            border: 1px solid var(--border-color);
+            padding: 3px 8px;
+            border-radius: 5px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+        }}
+
+        @media (max-width: 960px) {{
+            .btn-back-mobile {{
+                display: inline-block;
+            }}
+        }}
+
         /* Chart container */
         .chart-wrapper {{
-            padding: 16px 12px 12px 12px;
-            min-height: 400px;
+            padding: 8px 6px;
+            min-height: 280px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -551,7 +612,7 @@ def generate_html_report(df):
 
         /* Detail Ticker Sub-Table */
         .subtable-container {{
-            max-height: 280px;
+            max-height: 240px;
             overflow-y: auto;
             border-top: 1px solid var(--border-color);
         }}
@@ -561,25 +622,31 @@ def generate_html_report(df):
             color: #38bdf8;
             font-family: var(--font-mono);
             font-weight: 600;
-            padding: 2px 7px;
-            border-radius: 5px;
-            font-size: 12px;
+            padding: 1px 5px;
+            border-radius: 4px;
+            font-size: 11px;
             border: 1px solid #334155;
         }}
 
         .subtable-desc {{
-            font-size: 12px;
+            font-size: 11px;
             color: var(--text-muted);
-            max-width: 220px;
+            max-width: 190px;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
         }}
 
+        @media (max-width: 480px) {{
+            .subtable-desc {{
+                max-width: 110px;
+            }}
+        }}
+
         /* Custom Scrollbar */
         ::-webkit-scrollbar {{
-            width: 6px;
-            height: 6px;
+            width: 5px;
+            height: 5px;
         }}
         ::-webkit-scrollbar-track {{
             background: var(--bg-card);
@@ -595,54 +662,45 @@ def generate_html_report(df):
 </head>
 <body>
     <div class="container">
-        <!-- Header -->
+        <!-- Concise Header & KPI Strip -->
         <header class="header">
-            <div class="title-group">
-                <h1>Interactive Brokers Portfolio Intelligence</h1>
-                <p>FIFO Net PnL Performance & Individual Ticker Attribution Breakdown (EUR)</p>
+            <div class="brand">
+                <h1>IBKR Intelligence</h1>
+                <span class="badge neutral">EUR</span>
             </div>
-            <div>
-                <span class="badge neutral">Base Currency: EUR</span>
+            <div class="kpi-strip">
+                <div class="kpi-item">
+                    <span class="kpi-label">Net FIFO PnL</span>
+                    <span class="kpi-val {pnl_cls}">€{total_pnl:,.2f}</span>
+                </div>
+                <div class="kpi-item">
+                    <span class="kpi-label">Realized</span>
+                    <span class="kpi-val {realized_cls}">€{total_realized:,.2f}</span>
+                </div>
+                <div class="kpi-item">
+                    <span class="kpi-label">Unrealized</span>
+                    <span class="kpi-val {unrealized_cls}">€{total_unrealized:,.2f}</span>
+                </div>
+                <div class="kpi-item">
+                    <span class="kpi-label">Holdings</span>
+                    <span class="kpi-val" style="color: var(--color-accent);">{total_assets} Assets</span>
+                </div>
             </div>
         </header>
-
-        <!-- KPI Summary Cards -->
-        <section class="kpi-grid">
-            <div class="kpi-card">
-                <span class="kpi-label">Portfolio Net FIFO PnL</span>
-                <span class="kpi-value {pnl_cls}">€{total_pnl:,.2f}</span>
-                <span class="kpi-sub">Realized + Unrealized Net</span>
-            </div>
-            <div class="kpi-card">
-                <span class="kpi-label">Total Realized PnL</span>
-                <span class="kpi-value {realized_cls}">€{total_realized:,.2f}</span>
-                <span class="kpi-sub">Closed Trades FIFO Gain</span>
-            </div>
-            <div class="kpi-card">
-                <span class="kpi-label">Total Unrealized PnL</span>
-                <span class="kpi-value {unrealized_cls}">€{total_unrealized:,.2f}</span>
-                <span class="kpi-sub">Open Positions Marked-to-Market</span>
-            </div>
-            <div class="kpi-card">
-                <span class="kpi-label">Portfolio Scope</span>
-                <span class="kpi-value" style="color: var(--color-accent);">{total_assets} Assets</span>
-                <span class="kpi-sub">{total_themes} Investment Themes Active</span>
-            </div>
-        </section>
 
         <!-- 2-Column Split Dashboard -->
         <main class="dashboard-grid">
             <!-- Left Side: Themes List -->
-            <div class="card">
+            <div class="card" id="themes-card">
                 <div class="card-header">
                     <h2>
-                        <span>Investment Themes</span>
+                        <span>Themes</span>
                         <span class="badge neutral" id="themes-count-badge">{len(theme_summary)}</span>
                     </h2>
-                    <span style="font-size: 12px; color: var(--text-muted);">Click any row to filter right graph</span>
+                    <span style="font-size: 11px; color: var(--text-muted);">Tap to inspect</span>
                 </div>
                 <div class="search-box">
-                    <input id="theme-search" type="text" placeholder="Filter themes by name..." oninput="filterThemes(this.value)">
+                    <input id="theme-search" type="text" placeholder="Search themes..." oninput="filterThemes(this.value)">
                 </div>
                 <div class="table-container">
                     <table id="themes-table">
@@ -650,9 +708,9 @@ def generate_html_report(df):
                             <tr>
                                 <th>Theme</th>
                                 <th style="text-align:center;">Assets</th>
-                                <th class="num">Realized (€)</th>
-                                <th class="num">Unrealized (€)</th>
-                                <th class="num">Net FIFO PnL (€)</th>
+                                <th class="num col-hide-mobile">Realized</th>
+                                <th class="num col-hide-mobile">Unrealized</th>
+                                <th class="num">Net PnL</th>
                             </tr>
                         </thead>
                         <tbody id="themes-tbody">
@@ -661,7 +719,7 @@ def generate_html_report(df):
         pnl = row['TotalFifoPnl']
         cls = "positive" if pnl >= 0 else "negative"
         indicator_color = "#10b981" if pnl >= 0 else "#f43f5e"
-        html += f"""                            <tr class="theme-row" data-theme="{row['Theme']}" onclick="selectTheme('{row['Theme']}')">
+        html += f"""                            <tr class="theme-row" data-theme="{row['Theme']}" onclick="selectTheme('{row['Theme']}', true)">
                                 <td>
                                     <div class="theme-name-cell">
                                         <span class="theme-indicator" style="background: {indicator_color};"></span>
@@ -669,8 +727,8 @@ def generate_html_report(df):
                                     </div>
                                 </td>
                                 <td style="text-align:center;"><span class="badge neutral">{row['AssetCount']}</span></td>
-                                <td class="num">€{row['RealizedPnl']:,.2f}</td>
-                                <td class="num">€{row['UnrealizedPnl']:,.2f}</td>
+                                <td class="num col-hide-mobile">€{row['RealizedPnl']:,.2f}</td>
+                                <td class="num col-hide-mobile">€{row['UnrealizedPnl']:,.2f}</td>
                                 <td class="num {cls}" style="font-weight: 600;">€{pnl:,.2f}</td>
                             </tr>
 """
@@ -685,9 +743,9 @@ def generate_html_report(df):
                                     </div>
                                 </td>
                                 <td style="text-align:center;"><span class="badge neutral" style="font-weight: 700;">{total_assets}</span></td>
-                                <td class="num" style="font-weight: 700;">€{total_realized:,.2f}</td>
-                                <td class="num" style="font-weight: 700;">€{total_unrealized:,.2f}</td>
-                                <td class="num {pnl_cls}" style="font-weight: 700; font-size: 14px;">€{total_pnl:,.2f}</td>
+                                <td class="num col-hide-mobile" style="font-weight: 700;">€{total_realized:,.2f}</td>
+                                <td class="num col-hide-mobile" style="font-weight: 700;">€{total_unrealized:,.2f}</td>
+                                <td class="num {pnl_cls}" style="font-weight: 700; font-size: 13px;">€{total_pnl:,.2f}</td>
                             </tr>
                         </tfoot>
                     </table>
@@ -695,18 +753,17 @@ def generate_html_report(df):
             </div>
 
             <!-- Right Side: Interactive Ticker Contribution Chart & Details -->
-            <div class="sticky-panel">
+            <div class="sticky-panel" id="details-card">
                 <div class="card">
                     <div class="card-header">
-                        <div>
-                            <h2 id="active-theme-title">Theme Attribution: {top_theme}</h2>
-                            <div style="display: flex; gap: 8px; margin-top: 4px;">
-                                <span id="theme-pnl-pill" class="badge"></span>
-                                <span id="theme-asset-pill" class="badge neutral"></span>
-                            </div>
+                        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                            <button class="btn-back-mobile" onclick="scrollToThemes()">↑ Themes</button>
+                            <h2 id="active-theme-title">{top_theme}</h2>
+                            <span id="theme-pnl-pill" class="badge"></span>
+                            <span id="theme-asset-pill" class="badge neutral"></span>
                         </div>
                         <div class="view-controls">
-                            <button class="btn-toggle active" id="btn-metric-TotalFifoPnl" onclick="changeMetric('TotalFifoPnl')">Net PnL</button>
+                            <button class="btn-toggle active" id="btn-metric-TotalFifoPnl" onclick="changeMetric('TotalFifoPnl')">Net</button>
                             <button class="btn-toggle" id="btn-metric-RealizedPnl" onclick="changeMetric('RealizedPnl')">Realized</button>
                             <button class="btn-toggle" id="btn-metric-UnrealizedPnl" onclick="changeMetric('UnrealizedPnl')">Unrealized</button>
                         </div>
@@ -724,9 +781,9 @@ def generate_html_report(df):
                                 <tr>
                                     <th>Ticker</th>
                                     <th>Description</th>
-                                    <th class="num">Realized (€)</th>
-                                    <th class="num">Unrealized (€)</th>
-                                    <th class="num">Net PnL (€)</th>
+                                    <th class="num col-hide-mobile">Realized</th>
+                                    <th class="num col-hide-mobile">Unrealized</th>
+                                    <th class="num">Net PnL</th>
                                 </tr>
                             </thead>
                             <tbody id="ticker-tbody">
@@ -758,7 +815,7 @@ def generate_html_report(df):
             return sign + Math.abs(val).toLocaleString('en-US', {{ minimumFractionDigits: 2, maximumFractionDigits: 2 }});
         }}
 
-        function selectTheme(themeName) {{
+        function selectTheme(themeName, isUserClick = false) {{
             currentTheme = themeName;
 
             // Update row active state in table
@@ -772,6 +829,15 @@ def generate_html_report(df):
             }});
 
             renderActiveTheme();
+
+            // Smooth scroll to chart on mobile phones when tapped
+            if (isUserClick && window.innerWidth <= 960) {{
+                document.getElementById('details-card').scrollIntoView({{ behavior: 'smooth', block: 'start' }});
+            }}
+        }}
+
+        function scrollToThemes() {{
+            document.getElementById('themes-card').scrollIntoView({{ behavior: 'smooth', block: 'start' }});
         }}
 
         function changeMetric(metricKey) {{
@@ -793,7 +859,7 @@ def generate_html_report(df):
             }};
 
             // Update Header & Badges
-            document.getElementById('active-theme-title').innerText = themeObj.Theme + " — Asset Attribution";
+            document.getElementById('active-theme-title').innerText = themeObj.Theme;
             const pnlPill = document.getElementById('theme-pnl-pill');
             const pnlVal = themeObj.TotalFifoPnl;
             pnlPill.innerText = "Net " + formatCurrency(pnlVal);
@@ -818,9 +884,11 @@ def generate_html_report(df):
         function renderPlotlyChart(tickers) {{
             if (!tickers || tickers.length === 0) {{
                 Plotly.purge('ticker-chart');
-                document.getElementById('ticker-chart').innerHTML = '<div style="color: #64748b; padding: 40px; text-align: center;">No individual ticker data found for this theme.</div>';
+                document.getElementById('ticker-chart').innerHTML = '<div style="color: #64748b; padding: 30px; text-align: center; font-size: 12px;">No individual ticker data found.</div>';
                 return;
             }}
+
+            const isMobile = window.innerWidth <= 640;
 
             const yValues = tickers.map(t => t.UnderlyingSymbol);
             const xValues = tickers.map(t => t[currentMetric]);
@@ -849,8 +917,8 @@ def generate_html_report(df):
                 customdata: customData,
                 hovertemplate: 
                     '<b>%{{y}}</b> — %{{customdata[0]}}<br>' +
-                    'Selected Metric: <b>%{{x:€,.2f}}</b><br>' +
-                    '<span style="color:#94a3b8">Net FIFO PnL:</span> €%{{customdata[1]:,.2f}}<br>' +
+                    'Selected: <b>%{{x:€,.2f}}</b><br>' +
+                    '<span style="color:#94a3b8">Net:</span> €%{{customdata[1]:,.2f}}<br>' +
                     '<span style="color:#94a3b8">Realized:</span> €%{{customdata[2]:,.2f}}<br>' +
                     '<span style="color:#94a3b8">Unrealized:</span> €%{{customdata[3]:,.2f}}<extra></extra>'
             }};
@@ -863,36 +931,43 @@ def generate_html_report(df):
             const padRight = maxVal > 0 ? maxVal * 0.28 + span * 0.05 : span * 0.15;
             const xRange = [minVal - padLeft, maxVal + padRight];
 
-            const dynamicHeight = Math.max(380, Math.min(800, tickers.length * 36 + 80));
+            const barSpacing = isMobile ? 26 : 32;
+            const dynamicHeight = Math.max(isMobile ? 260 : 320, Math.min(isMobile ? 550 : 700, tickers.length * barSpacing + 50));
 
             const layout = {{
                 height: dynamicHeight,
-                margin: {{ l: 85, r: 85, t: 20, b: 40 }},
+                margin: {{ 
+                    l: isMobile ? 65 : 85, 
+                    r: isMobile ? 65 : 85, 
+                    t: 10, 
+                    b: 30 
+                }},
                 paper_bgcolor: 'rgba(0,0,0,0)',
                 plot_bgcolor: 'rgba(0,0,0,0)',
                 font: {{
                     family: 'Inter, sans-serif',
                     color: '#94a3b8',
-                    size: 12
+                    size: isMobile ? 11 : 12
                 }},
                 xaxis: {{
                     range: xRange,
                     title: {{
                         text: METRIC_LABELS[currentMetric],
-                        font: {{ size: 12, color: '#64748b' }}
+                        font: {{ size: 11, color: '#64748b' }}
                     }},
                     gridcolor: '#1e293b',
                     zerolinecolor: '#475569',
                     zerolinewidth: 1.5,
                     tickprefix: '€',
-                    automargin: true
+                    automargin: true,
+                    tickfont: {{ size: isMobile ? 10 : 11 }}
                 }},
                 yaxis: {{
                     automargin: true,
                     ticksuffix: '  ',
                     tickfont: {{
                         family: 'JetBrains Mono, monospace',
-                        size: 12,
+                        size: isMobile ? 11 : 12,
                         color: '#f8fafc',
                         weight: 600
                     }}
@@ -910,7 +985,7 @@ def generate_html_report(df):
         function renderSubTable(tickers) {{
             const tbody = document.getElementById('ticker-tbody');
             if (!tickers || tickers.length === 0) {{
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#64748b;">No assets</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#64748b; padding:15px;">No assets</td></tr>';
                 return;
             }}
 
@@ -922,8 +997,8 @@ def generate_html_report(df):
                     <tr>
                         <td><span class="ticker-pill">${{t.UnderlyingSymbol}}</span></td>
                         <td><div class="subtable-desc" title="${{t.Description}}">${{t.Description}}</div></td>
-                        <td class="num">€${{t.RealizedPnl.toLocaleString('en-US', {{ minimumFractionDigits: 2, maximumFractionDigits: 2 }})}}</td>
-                        <td class="num">€${{t.UnrealizedPnl.toLocaleString('en-US', {{ minimumFractionDigits: 2, maximumFractionDigits: 2 }})}}</td>
+                        <td class="num col-hide-mobile">€${{t.RealizedPnl.toLocaleString('en-US', {{ minimumFractionDigits: 2, maximumFractionDigits: 2 }})}}</td>
+                        <td class="num col-hide-mobile">€${{t.UnrealizedPnl.toLocaleString('en-US', {{ minimumFractionDigits: 2, maximumFractionDigits: 2 }})}}</td>
                         <td class="num ${{pnlCls}}" style="font-weight: 600;">€${{pnl.toLocaleString('en-US', {{ minimumFractionDigits: 2, maximumFractionDigits: 2 }})}}</td>
                     </tr>
                 `;
@@ -946,6 +1021,14 @@ def generate_html_report(df):
             }});
             document.getElementById('themes-count-badge').innerText = visibleCount;
         }}
+
+        // Handle window resize for Plotly responsiveness
+        window.addEventListener('resize', () => {{
+            const chartDiv = document.getElementById('ticker-chart');
+            if (chartDiv && chartDiv.data) {{
+                Plotly.Plots.resize('ticker-chart');
+            }}
+        }});
 
         // Initialize with default theme
         window.addEventListener('DOMContentLoaded', () => {{
