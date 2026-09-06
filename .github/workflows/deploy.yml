@@ -6,7 +6,7 @@ on:
       - main
   schedule:
     # Optional scheduled automatic refresh: daily at 06:00 UTC
-    - cron: '0 6 * * *'
+    - cron: '0 6,16,22 * * 1-5'
   workflow_dispatch: # Allows manual trigger from GitHub Actions UI
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
