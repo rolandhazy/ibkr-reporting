@@ -85,36 +85,48 @@ def parse_xml_to_df(xml_data):
     
     # FIFO Performance Summary Underlying (used in IBKR PnL summary reports)
     for item in root.iter("FIFOPerformanceSummaryUnderlying"):
-        symbol = item.get("symbol")
-        underlying = item.get("underlyingSymbol") or symbol
+        symbol = (item.get("symbol") or "").strip()
+        underlying = (item.get("underlyingSymbol") or "").strip() or symbol
+        desc = (item.get("description") or "").strip()
+
+        # Filter out IBKR's portfolio summary row ('Total (All Assets)') so it does not double count totals or show up as a ticker
+        if desc.lower().startswith("total") or (not symbol and not underlying):
+            continue
+
         records.append({
             "Symbol": symbol,
             "UnderlyingSymbol": underlying,
-            "Description": item.get("description"),
+            "Description": desc,
             "TotalFifoPnl": float(item.get("totalFifoPnl", 0.0) or 0.0),
             "TotalRealizedPnl": float(item.get("totalRealizedPnl", 0.0) or 0.0),
             "TotalUnrealizedPnl": float(item.get("totalUnrealizedPnl", 0.0) or 0.0)
         })
         
     for trade in root.iter("Trade"):
-        symbol = trade.get("symbol")
-        underlying = trade.get("underlyingSymbol") or symbol
+        symbol = (trade.get("symbol") or "").strip()
+        underlying = (trade.get("underlyingSymbol") or "").strip() or symbol
+        desc = (trade.get("description") or "").strip()
+        if desc.lower().startswith("total") or (not symbol and not underlying):
+            continue
         records.append({
             "Symbol": symbol,
             "UnderlyingSymbol": underlying,
-            "Description": trade.get("description"),
+            "Description": desc,
             "TotalFifoPnl": float(trade.get("fifoPnlRealized", 0.0) or 0.0),
             "TotalRealizedPnl": float(trade.get("fifoPnlRealized", 0.0) or 0.0),
             "TotalUnrealizedPnl": 0.0
         })
         
     for pos in root.iter("OpenPosition"):
-        symbol = pos.get("symbol")
-        underlying = pos.get("underlyingSymbol") or symbol
+        symbol = (pos.get("symbol") or "").strip()
+        underlying = (pos.get("underlyingSymbol") or "").strip() or symbol
+        desc = (pos.get("description") or "").strip()
+        if desc.lower().startswith("total") or (not symbol and not underlying):
+            continue
         records.append({
             "Symbol": symbol,
             "UnderlyingSymbol": underlying,
-            "Description": pos.get("description"),
+            "Description": desc,
             "TotalFifoPnl": float(pos.get("fifoPnlUnrealized", 0.0) or 0.0),
             "TotalRealizedPnl": 0.0,
             "TotalUnrealizedPnl": float(pos.get("fifoPnlUnrealized", 0.0) or 0.0)
@@ -467,6 +479,21 @@ def generate_html_report(df):
             color: var(--color-negative) !important;
         }}
 
+        tfoot .total-row {{
+            position: sticky;
+            bottom: 0;
+            background: #0f172a;
+            border-top: 2px solid #334155;
+            z-index: 2;
+        }}
+
+        tfoot .total-row td {{
+            padding: 12px 14px;
+            color: var(--text-primary);
+            font-weight: 700;
+            background: #0f172a;
+        }}
+
         /* Right Sticky Panel */
         .sticky-panel {{
             position: sticky;
@@ -647,6 +674,20 @@ def generate_html_report(df):
 """
 
     html += f"""                        </tbody>
+                        <tfoot>
+                            <tr class="total-row">
+                                <td>
+                                    <div class="theme-name-cell" style="font-weight: 700; color: #fff;">
+                                        <span class="theme-indicator" style="background: var(--color-accent);"></span>
+                                        <span>Total Portfolio</span>
+                                    </div>
+                                </td>
+                                <td style="text-align:center;"><span class="badge neutral" style="font-weight: 700;">{total_assets}</span></td>
+                                <td class="num" style="font-weight: 700;">€{total_realized:,.2f}</td>
+                                <td class="num" style="font-weight: 700;">€{total_unrealized:,.2f}</td>
+                                <td class="num {pnl_cls}" style="font-weight: 700; font-size: 14px;">€{total_pnl:,.2f}</td>
+                            </tr>
+                        </tfoot>
                     </table>
                 </div>
             </div>
