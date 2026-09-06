@@ -1,16 +1,18 @@
 import os
 import time
-import json
 import xml.etree.ElementTree as ET
 import pandas as pd
 import requests
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # Secrets & Endpoints
 IBKR_FLEX_TOKEN = os.getenv("IBKR_FLEX_TOKEN")
 IBKR_QUERY_ID = os.getenv("IBKR_QUERY_ID")
 
-FLEX_SEND_URL = f"https://www.interactivebrokers.com/Universal/servlet/FlexStatementService.SendRequest?t={IBKR_FLEX_TOKEN}&q={IBKR_QUERY_ID}&v=3"
-FLEX_GET_URL = "https://www.interactivebrokers.com/Universal/servlet/FlexStatementService.GetStatement?q={ref_code}&t={token}&v=3"
+FLEX_SEND_URL = f"https://ndcdyn.interactivebrokers.com/AccountManagement/FlexWebService/SendRequest?t={IBKR_FLEX_TOKEN}&q={IBKR_QUERY_ID}&v=3"
 
 THEME_MAP = {
     'Big Tech': ['AAPL', 'AMZN', 'GOOG', 'GOOGL', 'META', 'MSFT'],
@@ -40,28 +42,58 @@ THEME_MAP = {
 SYMBOL_TO_THEME = {sym: t for t, symbols in THEME_MAP.items() for sym in symbols}
 
 def fetch_flex_report():
+    if not IBKR_FLEX_TOKEN or not IBKR_QUERY_ID:
+        raise ValueError("Missing IBKR_FLEX_TOKEN or IBKR_QUERY_ID environment variables.")
+
     headers = {"User-Agent": "Mozilla/5.0"}
     res = requests.get(FLEX_SEND_URL, headers=headers)
     res.raise_for_status()
     root = ET.fromstring(res.text)
     
     if root.findtext("Status") != "Success":
-        raise RuntimeError(f"Flex Request Failed: {root.findtext('ErrorMessage')}")
+        code = root.findtext("ErrorCode") or ""
+        msg = root.findtext("ErrorMessage") or res.text
+        raise RuntimeError(f"Flex Request Failed ({code}): {msg}")
     
     ref_code = root.findtext("ReferenceCode")
-    get_url = FLEX_GET_URL.format(ref_code=ref_code, token=IBKR_FLEX_TOKEN)
+    base_get_url = root.findtext("Url") or "https://gdcdyn.interactivebrokers.com/AccountManagement/FlexWebService/GetStatement"
+    get_url = f"{base_get_url}?q={ref_code}&t={IBKR_FLEX_TOKEN}&v=3"
+    print(f"Flex statement request accepted (Reference: {ref_code}). Polling for completion...")
     
-    for _ in range(12):
+    for attempt in range(1, 15):
         time.sleep(10)
         stmt_res = requests.get(get_url, headers=headers)
-        if "<FlexQueryResponse" in stmt_res.text:
+        if "<FlexQueryResponse" in stmt_res.text or "<FlexStatements" in stmt_res.text:
+            print("Flex statement successfully retrieved.")
             return stmt_res.text
+            
+        if "<ErrorCode>" in stmt_res.text:
+            err_root = ET.fromstring(stmt_res.text)
+            err_code = err_root.findtext("ErrorCode")
+            err_msg = err_root.findtext("ErrorMessage")
+            if err_code != "1019":  # 1019 = in progress
+                raise RuntimeError(f"IBKR Error ({err_code}): {err_msg}")
+            print(f"Statement still generating... (attempt {attempt}/14)")
+            
     raise TimeoutError("IBKR Flex Statement generation timed out.")
 
 def parse_xml_to_df(xml_data):
     root = ET.fromstring(xml_data)
     records = []
     
+    # FIFO Performance Summary Underlying (used in IBKR PnL summary reports)
+    for item in root.iter("FIFOPerformanceSummaryUnderlying"):
+        symbol = item.get("symbol")
+        underlying = item.get("underlyingSymbol") or symbol
+        records.append({
+            "Symbol": symbol,
+            "UnderlyingSymbol": underlying,
+            "Description": item.get("description"),
+            "TotalFifoPnl": float(item.get("totalFifoPnl", 0.0) or 0.0),
+            "TotalRealizedPnl": float(item.get("totalRealizedPnl", 0.0) or 0.0),
+            "TotalUnrealizedPnl": float(item.get("totalUnrealizedPnl", 0.0) or 0.0)
+        })
+        
     for trade in root.iter("Trade"):
         symbol = trade.get("symbol")
         underlying = trade.get("underlyingSymbol") or symbol
@@ -69,8 +101,8 @@ def parse_xml_to_df(xml_data):
             "Symbol": symbol,
             "UnderlyingSymbol": underlying,
             "Description": trade.get("description"),
-            "TotalFifoPnl": float(trade.get("fifoPnlRealized", 0.0)),
-            "TotalRealizedPnl": float(trade.get("fifoPnlRealized", 0.0)),
+            "TotalFifoPnl": float(trade.get("fifoPnlRealized", 0.0) or 0.0),
+            "TotalRealizedPnl": float(trade.get("fifoPnlRealized", 0.0) or 0.0),
             "TotalUnrealizedPnl": 0.0
         })
         
@@ -81,13 +113,17 @@ def parse_xml_to_df(xml_data):
             "Symbol": symbol,
             "UnderlyingSymbol": underlying,
             "Description": pos.get("description"),
-            "TotalFifoPnl": float(pos.get("fifoPnlUnrealized", 0.0)),
+            "TotalFifoPnl": float(pos.get("fifoPnlUnrealized", 0.0) or 0.0),
             "TotalRealizedPnl": 0.0,
-            "TotalUnrealizedPnl": float(pos.get("fifoPnlUnrealized", 0.0))
+            "TotalUnrealizedPnl": float(pos.get("fifoPnlUnrealized", 0.0) or 0.0)
         })
         
     df = pd.DataFrame(records)
-    df["Theme"] = df["UnderlyingSymbol"].map(lambda x: SYMBOL_TO_THEME.get(x, "Other"))
+    if df.empty:
+        print("Warning: No records found in Flex report XML.")
+        df = pd.DataFrame(columns=["Symbol", "UnderlyingSymbol", "Description", "TotalFifoPnl", "TotalRealizedPnl", "TotalUnrealizedPnl", "Theme"])
+    else:
+        df["Theme"] = df["UnderlyingSymbol"].map(lambda x: SYMBOL_TO_THEME.get(x, "Other"))
     return df
 
 def generate_html_report(df):
