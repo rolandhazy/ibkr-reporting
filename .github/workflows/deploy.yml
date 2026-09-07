@@ -6,7 +6,7 @@ on:
       - main
   schedule:
     # Daily refresh on weekdays at 08:10, 10:10, 20:10 UTC
-    - cron: '10 8,10,20 * * 1-5'
+    - cron: '20 8,13,20 * * 1-5'
   workflow_dispatch: # Allows manual trigger from GitHub Actions UI
 
 permissions:
