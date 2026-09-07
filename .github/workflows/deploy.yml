@@ -5,8 +5,8 @@ on:
     branches:
       - main
   schedule:
-    # Daily refresh on weekdays at 06:00, 16:00, 22:00 UTC
-    - cron: '0 6,16,22 * * 1-5'
+    # Daily refresh on weekdays at 08:10, 10:10, 20:10 UTC
+    - cron: '10 8,10,20 * * 1-5'
   workflow_dispatch: # Allows manual trigger from GitHub Actions UI
 
 permissions:
