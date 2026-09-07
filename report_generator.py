@@ -730,21 +730,34 @@ def generate_html_report(
 
         .chart-wrapper {{
             padding: 4px 6px 8px 6px;
-            min-height: 280px;
+            min-height: 220px;
             display: flex;
             align-items: center;
             justify-content: center;
+        }}
+
+        @media (max-width: 640px) {{
+            .chart-wrapper {{
+                min-height: 150px;
+                padding: 2px 4px 4px 4px;
+            }}
         }}
 
         #ticker-chart {{
             width: 100%;
         }}
 
-        /* Detail Ticker Sub-Table */
+        /* Detail Ticker Sub-Table: sized to display 8 tickers comfortably */
         .subtable-container {{
-            max-height: 260px;
+            max-height: 380px;
             overflow-y: auto;
             border-top: 1px solid var(--border-color);
+        }}
+
+        @media (max-width: 640px) {{
+            .subtable-container {{
+                max-height: 350px;
+            }}
         }}
 
         .ticker-pill {{
@@ -1303,12 +1316,42 @@ def generate_html_report(
             }}
 
             const isLight = document.documentElement.getAttribute('data-theme') === 'light';
-            const isMobile = window.innerWidth <= 640;
+            const width = window.innerWidth;
+            const isTiny = width <= 480;
+            const isSmall = width <= 768;
 
             // Invert array so highest rank is displayed at top of vertical axis
             const chartData = [...tickers].reverse();
             const ySymbols = chartData.map(t => t.UnderlyingSymbol);
             const descriptions = chartData.map(t => t.Description);
+
+            // Responsive sizing per screen tier
+            let barHeight, dynamicHeight, markerSize, fontSize, yFontSize, xFontSize, margins;
+            if (isTiny) {{
+                barHeight = 16;
+                dynamicHeight = Math.max(140, Math.min(260, chartData.length * barHeight + 40));
+                markerSize = 6;
+                fontSize = 10;
+                yFontSize = 10;
+                xFontSize = 9;
+                margins = {{ l: 48, r: 10, t: 8, b: 22 }};
+            }} else if (isSmall) {{
+                barHeight = 19;
+                dynamicHeight = Math.max(170, Math.min(320, chartData.length * barHeight + 48));
+                markerSize = 7;
+                fontSize = 11;
+                yFontSize = 11;
+                xFontSize = 10;
+                margins = {{ l: 58, r: 14, t: 10, b: 24 }};
+            }} else {{
+                barHeight = 25;
+                dynamicHeight = Math.max(220, Math.min(520, chartData.length * barHeight + 58));
+                markerSize = 9;
+                fontSize = 12;
+                yFontSize = 12;
+                xFontSize = 11;
+                margins = {{ l: 78, r: 18, t: 14, b: 28 }};
+            }}
 
             // Realized Trace
             const traceRealized = {{
@@ -1350,11 +1393,11 @@ def generate_html_report(
                 x: chartData.map(t => t.TotalFifoPnl),
                 marker: {{
                     symbol: 'diamond',
-                    size: isMobile ? 8 : 10,
+                    size: markerSize,
                     color: chartData.map(t => t.TotalFifoPnl >= 0 ? '#10b981' : '#f43f5e'),
                     line: {{
                         color: isLight ? '#0f172a' : '#ffffff',
-                        width: 1.5
+                        width: isTiny ? 1 : 1.5
                     }}
                 }},
                 customdata: descriptions,
@@ -1370,26 +1413,18 @@ def generate_html_report(
             const span = (maxVal - minVal) || 100;
             const xRange = [minVal - span * 0.08, maxVal + span * 0.08];
 
-            const barHeight = isMobile ? 24 : 28;
-            const dynamicHeight = Math.max(isMobile ? 260 : 300, Math.min(isMobile ? 650 : 800, chartData.length * barHeight + 70));
-
             const layout = {{
                 barmode: 'relative',
-                bargap: 0.32,
+                bargap: isSmall ? 0.28 : 0.32,
                 height: dynamicHeight,
-                margin: {{ 
-                    l: isMobile ? 65 : 85, 
-                    r: 20, 
-                    t: 15, 
-                    b: 30 
-                }},
+                margin: margins,
                 showlegend: false,
                 paper_bgcolor: 'rgba(0,0,0,0)',
                 plot_bgcolor: 'rgba(0,0,0,0)',
                 font: {{
                     family: 'Inter, sans-serif',
                     color: isLight ? '#475569' : '#94a3b8',
-                    size: isMobile ? 11 : 12
+                    size: fontSize
                 }},
                 xaxis: {{
                     range: xRange,
@@ -1398,14 +1433,14 @@ def generate_html_report(
                     zerolinewidth: 1.5,
                     tickprefix: '€',
                     automargin: true,
-                    tickfont: {{ size: isMobile ? 10 : 11 }}
+                    tickfont: {{ size: xFontSize }}
                 }},
                 yaxis: {{
                     automargin: true,
                     ticksuffix: '  ',
                     tickfont: {{
                         family: 'JetBrains Mono, monospace',
-                        size: isMobile ? 11 : 12,
+                        size: yFontSize,
                         color: isLight ? '#0f172a' : '#f8fafc',
                         weight: 600
                     }}
@@ -1510,12 +1545,20 @@ def generate_html_report(
             renderActiveView();
         }}
 
-        // Handle window resize for Plotly responsiveness
+        // Handle responsive window resize
+        let resizeTimer;
         window.addEventListener('resize', () => {{
-            const chartDiv = document.getElementById('ticker-chart');
-            if (chartDiv && chartDiv.data) {{
-                Plotly.Plots.resize('ticker-chart');
-            }}
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {{
+                if (windowChartTickers && windowChartTickers.length > 0) {{
+                    renderPlotlyChart(windowChartTickers);
+                }} else {{
+                    const chartDiv = document.getElementById('ticker-chart');
+                    if (chartDiv && chartDiv.data) {{
+                        Plotly.Plots.resize('ticker-chart');
+                    }}
+                }}
+            }}, 100);
         }});
 
         // Initialization
