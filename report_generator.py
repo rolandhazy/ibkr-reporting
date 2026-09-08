@@ -872,6 +872,19 @@ def generate_html_report(
             width: 100%;
         }}
 
+        /* Clickable Theme Labels in Graph View */
+        #main-chart .ytick text {{
+            cursor: pointer !important;
+            pointer-events: all !important;
+            transition: fill 0.15s ease, font-weight 0.15s ease;
+        }}
+
+        #main-chart .ytick text:hover {{
+            fill: var(--color-accent) !important;
+            font-weight: 700 !important;
+            text-decoration: underline;
+        }}
+
         /* Screen-Size Responsive Media Breakpoints for Tables */
         @media (min-width: 1280px) {{
             thead th {{
@@ -1114,7 +1127,7 @@ def generate_html_report(
             <div id="graph-view-container" class="chart-view-panel" style="display: none;">
                 <div class="chart-legend">
                     <div class="chart-click-hint" id="chart-click-hint">
-                        <span>💡 Tip: Click on any bar to drill down</span>
+                        <span>💡 Tip: Tap any theme name or bar to drill down</span>
                     </div>
                     <div class="legend-items">
                         <span class="legend-item"><span class="legend-swatch realized-swatch"></span> Realized</span>
@@ -1724,7 +1737,26 @@ def generate_html_report(
             }};
 
             Plotly.react(container, [traceRealized, traceUnrealized, traceNet], layout, config).then(() => {{
-                // Wire click-to-drilldown
+                // Make theme labels (y-axis tick texts) direct click & touch drilldown triggers
+                const yTicks = container.querySelectorAll('.ytick text');
+                yTicks.forEach(tick => {{
+                    tick.style.cursor = 'pointer';
+                    tick.style.pointerEvents = 'all';
+                    
+                    const handleThemeClick = (e) => {{
+                        e.stopPropagation();
+                        e.preventDefault();
+                        const themeName = tick.textContent.trim();
+                        if (themeName) {{
+                            drillDownToTheme(themeName);
+                        }}
+                    }};
+
+                    tick.onclick = handleThemeClick;
+                    tick.ontouchend = handleThemeClick;
+                }});
+
+                // Also support clicking the bars as secondary trigger
                 if (container.removeAllListeners) {{
                     container.removeAllListeners('plotly_click');
                 }}
