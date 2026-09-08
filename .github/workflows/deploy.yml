@@ -1,9 +1,8 @@
 name: Deploy IBKR Report to Cloudflare
 
 on:
-  push:
-    branches:
-      - main
+  release:
+    types: [published]
   workflow_dispatch: # Allows manual trigger from GitHub Actions UI
 
 permissions:
