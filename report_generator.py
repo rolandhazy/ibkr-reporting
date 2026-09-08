@@ -26,7 +26,7 @@ def generate_html_report(
     ticker_summary['UnrealizedPnl'] = ticker_summary['UnrealizedPnl'].round(2)
     ticker_summary['IsActive'] = (ticker_summary['UnrealizedPnl'].abs() > 0.001).astype(bool)
 
-    # Initial full-dataset theme aggregation
+    # Theme aggregation
     theme_summary = ticker_summary.groupby('Theme').agg(
         TotalFifoPnl=('TotalFifoPnl', 'sum'),
         RealizedPnl=('RealizedPnl', 'sum'),
@@ -40,13 +40,8 @@ def generate_html_report(
     theme_summary['RealizedPnl'] = theme_summary['RealizedPnl'].round(2)
     theme_summary['UnrealizedPnl'] = theme_summary['UnrealizedPnl'].round(2)
 
-    total_pnl = round(float(ticker_summary['TotalFifoPnl'].sum()), 2) if not ticker_summary.empty else 0.0
-    total_realized = round(float(ticker_summary['RealizedPnl'].sum()), 2) if not ticker_summary.empty else 0.0
-    total_unrealized = round(float(ticker_summary['UnrealizedPnl'].sum()), 2) if not ticker_summary.empty else 0.0
     total_assets = int(ticker_summary['UnderlyingSymbol'].nunique()) if not ticker_summary.empty else 0
     active_assets_count = int(ticker_summary['IsActive'].sum()) if not ticker_summary.empty else 0
-
-    top_theme = str(theme_summary.iloc[0]['Theme']) if not theme_summary.empty else ""
 
     theme_json = json.dumps(theme_summary.to_dict(orient='records'))
     ticker_json = json.dumps(ticker_summary.to_dict(orient='records'))
@@ -336,21 +331,7 @@ def generate_html_report(
             white-space: nowrap;
         }}
 
-        /* Main 2-Column Split Dashboard */
-        .dashboard-grid {{
-            display: grid;
-            grid-template-columns: 44% 56%;
-            gap: 14px;
-            align-items: start;
-        }}
-
-        @media (max-width: 960px) {{
-            .dashboard-grid {{
-                grid-template-columns: 1fr;
-                gap: 12px;
-            }}
-        }}
-
+        /* Unified Single-View Dashboard Container */
         .card {{
             background: var(--bg-card);
             border: 1px solid var(--border-color);
@@ -361,22 +342,156 @@ def generate_html_report(
 
         .card-header {{
             background: var(--bg-card-header);
-            padding: 9px 14px;
+            padding: 10px 14px;
             border-bottom: 1px solid var(--border-color);
             display: flex;
             justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }}
+
+        .breadcrumb-nav {{
+            display: flex;
             align-items: center;
             gap: 8px;
             flex-wrap: wrap;
         }}
 
-        .card-header h2 {{
-            font-size: 13px;
+        .btn-drilldown-back {{
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--color-accent);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
             font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }}
+
+        .btn-drilldown-back:hover {{
+            background: var(--color-accent-bg);
+            border-color: var(--color-accent);
+        }}
+
+        .breadcrumb-title {{
+            font-size: 14px;
+            font-weight: 700;
             color: var(--text-primary);
             display: flex;
             align-items: center;
             gap: 6px;
+        }}
+
+        /* View Switcher Segmented Control */
+        .view-switcher {{
+            display: inline-flex;
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 2px;
+            gap: 2px;
+        }}
+
+        .view-btn {{
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 12px;
+            border-radius: 6px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            font-family: var(--font-main);
+        }}
+
+        .view-btn:hover {{
+            color: var(--text-primary);
+        }}
+
+        .view-btn.active {{
+            background: var(--color-accent);
+            color: #0b1120;
+            font-weight: 700;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        }}
+
+        /* Secondary Toolbar: Ticker Search & Highlights */
+        .toolbar {{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 14px;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border-subtle);
+            flex-wrap: wrap;
+            gap: 10px;
+        }}
+
+        .ticker-search-box {{
+            display: flex;
+            align-items: center;
+            position: relative;
+            flex: 1 1 280px;
+            max-width: 420px;
+        }}
+
+        .ticker-search-box input {{
+            width: 100%;
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 6px 28px 6px 10px;
+            color: var(--text-primary);
+            font-size: 12px;
+            font-family: var(--font-main);
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }}
+
+        .ticker-search-box input:focus {{
+            border-color: var(--color-accent);
+            box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.15);
+        }}
+
+        .search-clear-btn {{
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 12px;
+            display: none;
+            line-height: 1;
+        }}
+
+        .search-clear-btn:hover {{
+            color: var(--text-primary);
+        }}
+
+        .toolbar-right {{
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }}
+
+        .performer-highlights {{
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
         }}
 
         .badge {{
@@ -435,41 +550,22 @@ def generate_html_report(
             font-weight: 700;
         }}
 
-        /* Search box */
-        .search-box {{
-            padding: 8px 12px;
-            border-bottom: 1px solid var(--border-subtle);
-            background: var(--bg-card);
-        }}
-
-        .search-box input {{
-            width: 100%;
-            background: var(--input-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            padding: 6px 10px;
-            color: var(--text-primary);
-            font-size: 12px;
-            font-family: var(--font-main);
-            outline: none;
-            transition: border-color 0.2s, box-shadow 0.2s;
-        }}
-
-        .search-box input:focus {{
-            border-color: var(--color-accent);
-            box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.15);
-        }}
-
-        /* Table Design */
+        /* Fully Responsive Table Design */
         .table-container {{
-            max-height: 640px;
+            /* Dynamic height responding to viewport height so headers & footers stay in view */
+            max-height: clamp(380px, calc(100vh - 240px), 820px);
             overflow-y: auto;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
             position: relative;
+            width: 100%;
         }}
 
         table {{
             width: 100%;
-            border-collapse: collapse;
+            min-width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
             font-size: 12px;
         }}
 
@@ -480,38 +576,75 @@ def generate_html_report(
             color: var(--text-secondary);
             font-weight: 600;
             text-align: left;
-            padding: 8px 10px;
+            padding: 9px 12px;
             border-bottom: 1px solid var(--border-color);
             z-index: 2;
             font-size: 11px;
             text-transform: uppercase;
             letter-spacing: 0.03em;
+            white-space: nowrap;
         }}
 
         tbody td {{
-            padding: 8px 10px;
+            padding: 9px 12px;
             border-bottom: 1px solid var(--border-subtle);
             color: var(--text-secondary);
             vertical-align: middle;
+            background: var(--bg-card);
         }}
 
-        .theme-row, .total-row {{
+        .interactive-row {{
             cursor: pointer;
             transition: background 0.12s ease;
-            border-left: 3px solid transparent;
         }}
 
-        .theme-row:hover, .total-row:hover {{
+        .interactive-row:hover td {{
             background: var(--table-hover-bg);
         }}
 
-        .theme-row.active, .total-row.active {{
-            background: var(--table-active-bg) !important;
-            border-left: 3px solid var(--color-accent);
+        .interactive-row td:first-child {{
+            border-left: 3px solid transparent;
         }}
 
-        .theme-row.active td, .total-row.active td {{
-            color: var(--text-primary);
+        .interactive-row:hover td:first-child {{
+            border-left-color: var(--color-accent);
+        }}
+
+        /* Responsive Column Width Rules */
+        .col-theme {{
+            width: auto;
+            min-width: 130px;
+        }}
+
+        .col-assets {{
+            width: 80px;
+            min-width: 65px;
+            text-align: center;
+        }}
+
+        .col-ticker {{
+            width: 95px;
+            min-width: 85px;
+        }}
+
+        .col-desc {{
+            width: auto;
+            min-width: 120px;
+        }}
+
+        .col-theme-tag {{
+            width: 120px;
+            min-width: 95px;
+        }}
+
+        .col-realized, .col-unrealized {{
+            width: 110px;
+            min-width: 85px;
+        }}
+
+        .col-pnl {{
+            width: 155px;
+            min-width: 125px;
         }}
 
         .theme-name-cell {{
@@ -519,7 +652,20 @@ def generate_html_report(
             font-weight: 600;
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
+            white-space: nowrap;
+        }}
+
+        .drilldown-hint {{
+            font-size: 10px;
+            color: var(--color-accent);
+            opacity: 0;
+            transition: opacity 0.15s ease;
+            margin-left: 4px;
+        }}
+
+        .interactive-row:hover .drilldown-hint {{
+            opacity: 1;
         }}
 
         .theme-indicator {{
@@ -592,113 +738,102 @@ def generate_html_report(
         tfoot .total-row {{
             position: sticky;
             bottom: 0;
-            background: var(--total-row-bg);
-            border-top: 2px solid var(--border-color);
             z-index: 2;
-        }}
-
-        tfoot .total-row td {{
-            padding: 9px 10px;
-            color: var(--text-primary);
-            font-weight: 700;
-            background: var(--total-row-bg);
-        }}
-
-        /* Active position dot */
-        .active-dot {{
-            width: 5px;
-            height: 5px;
-            border-radius: 50%;
-            background: var(--color-accent);
-            display: inline-block;
-            box-shadow: 0 0 4px var(--color-accent);
-            flex-shrink: 0;
-        }}
-
-        /* Mobile Column Hiding */
-        @media (max-width: 640px) {{
-            .col-hide-mobile {{
-                display: none !important;
-            }}
-            .table-container {{
-                max-height: 480px;
-            }}
-            tbody td, thead th, tfoot .total-row td {{
-                padding: 7px 7px !important;
-                font-size: 11px !important;
-            }}
-            .num {{
-                font-size: 11px !important;
-            }}
-            .theme-name-cell span {{
-                max-width: 140px;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
-            }}
-        }}
-
-        /* Right Sticky Panel */
-        .sticky-panel {{
-            position: sticky;
-            top: 14px;
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
-        }}
-
-        @media (max-width: 960px) {{
-            .sticky-panel {{
-                position: static;
-            }}
-        }}
-
-        .btn-back-mobile {{
-            display: none;
-            background: var(--ticker-pill-bg);
-            color: var(--color-accent);
-            border: 1px solid var(--border-color);
-            padding: 3px 8px;
-            border-radius: 5px;
-            font-size: 11px;
-            font-weight: 600;
             cursor: pointer;
         }}
 
-        @media (max-width: 960px) {{
-            .btn-back-mobile {{
-                display: inline-block;
-            }}
+        tfoot .total-row td {{
+            padding: 10px 12px;
+            color: var(--text-primary);
+            font-weight: 700;
+            background: var(--total-row-bg);
+            border-top: 2px solid var(--border-color);
+            border-bottom: none;
         }}
 
-        /* Details card toolbar */
-        .controls-toolbar {{
+        tfoot .total-row:hover td {{
+            background: var(--table-hover-bg);
+        }}
+
+        .ticker-pill {{
+            background: var(--ticker-pill-bg);
+            color: var(--ticker-pill-text);
+            font-family: var(--font-mono);
+            font-weight: 600;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+            border: 1px solid var(--ticker-pill-border);
+            display: inline-block;
+        }}
+
+        .theme-pill-tag {{
+            font-size: 10px;
+            background: rgba(148, 163, 184, 0.12);
+            color: var(--text-secondary);
+            padding: 1px 6px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            white-space: nowrap;
+            display: inline-block;
+        }}
+
+        .theme-pill-tag:hover {{
+            background: var(--color-accent-bg);
+            color: var(--color-accent);
+        }}
+
+        .active-dot {{
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--color-accent);
+            display: inline-block;
+            box-shadow: 0 0 5px var(--color-accent);
+            flex-shrink: 0;
+        }}
+
+        .subtable-desc {{
+            font-size: 11px;
+            color: var(--text-muted);
+            max-width: clamp(140px, 28vw, 360px);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }}
+
+        /* Graph View Container & Legend */
+        .chart-view-panel {{
+            padding: 8px 12px 14px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }}
+
+        .chart-legend {{
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 8px 14px;
-            background: var(--bg-card-header);
-            border-bottom: 1px solid var(--border-subtle);
+            font-size: 11px;
+            color: var(--text-secondary);
+            padding: 4px 6px;
             flex-wrap: wrap;
             gap: 8px;
         }}
 
-        .performer-highlights {{
-            display: flex;
+        .chart-click-hint {{
+            font-size: 11px;
+            color: var(--text-muted);
+            display: inline-flex;
             align-items: center;
-            gap: 6px;
-            flex-wrap: wrap;
+            gap: 4px;
         }}
 
-        /* Chart legend & wrapper */
-        .chart-legend {{
+        .legend-items {{
             display: flex;
-            justify-content: flex-end;
             align-items: center;
             gap: 12px;
-            font-size: 11px;
-            color: var(--text-secondary);
-            flex-wrap: wrap;
         }}
 
         .legend-item {{
@@ -729,60 +864,122 @@ def generate_html_report(
         }}
 
         .chart-wrapper {{
-            padding: 4px 6px 8px 6px;
-            min-height: 220px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            width: 100%;
+            min-height: clamp(380px, calc(100vh - 300px), 720px);
         }}
 
-        @media (max-width: 640px) {{
-            .chart-wrapper {{
-                min-height: 150px;
-                padding: 2px 4px 4px 4px;
-            }}
-        }}
-
-        #ticker-chart {{
+        #main-chart {{
             width: 100%;
         }}
 
-        /* Detail Ticker Sub-Table: sized to display 8 tickers comfortably */
-        .subtable-container {{
-            max-height: 380px;
-            overflow-y: auto;
-            border-top: 1px solid var(--border-color);
-        }}
-
-        @media (max-width: 640px) {{
-            .subtable-container {{
-                max-height: 350px;
+        /* Screen-Size Responsive Media Breakpoints for Tables */
+        @media (min-width: 1280px) {{
+            thead th {{
+                padding: 11px 14px;
+                font-size: 11.5px;
+            }}
+            tbody td {{
+                padding: 10px 14px;
+                font-size: 12.5px;
+            }}
+            .num {{
+                font-size: 12.5px;
+            }}
+            .pnl-amount {{
+                font-size: 12.5px;
+            }}
+            .ratio-bar-track {{
+                width: 62px;
+                height: 5px;
             }}
         }}
 
-        .ticker-pill {{
-            background: var(--ticker-pill-bg);
-            color: var(--ticker-pill-text);
-            font-family: var(--font-mono);
-            font-weight: 600;
-            padding: 1px 5px;
-            border-radius: 4px;
-            font-size: 11px;
-            border: 1px solid var(--ticker-pill-border);
-        }}
-
-        .subtable-desc {{
-            font-size: 11px;
-            color: var(--text-muted);
-            max-width: 190px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }}
-
-        @media (max-width: 480px) {{
+        @media (max-width: 768px) {{
+            .table-container {{
+                max-height: clamp(340px, calc(100vh - 250px), 620px);
+            }}
+            thead th {{
+                padding: 8px 10px;
+                font-size: 10.5px;
+            }}
+            tbody td {{
+                padding: 8px 10px;
+                font-size: 11.5px;
+            }}
+            .num {{
+                font-size: 11.5px;
+            }}
             .subtable-desc {{
-                max-width: 110px;
+                max-width: clamp(110px, 20vw, 200px);
+            }}
+            .ratio-bar-track {{
+                width: 46px;
+                height: 4px;
+            }}
+        }}
+
+        @media (max-width: 600px) {{
+            .col-hide-mobile {{
+                display: none !important;
+            }}
+            .table-container {{
+                max-height: calc(100vh - 280px);
+                min-height: 300px;
+            }}
+            thead th {{
+                padding: 7px 8px !important;
+                font-size: 10px !important;
+            }}
+            tbody td {{
+                padding: 7px 8px !important;
+                font-size: 11px !important;
+            }}
+            tfoot .total-row td {{
+                padding: 8px 8px !important;
+                font-size: 11px !important;
+            }}
+            .num {{
+                font-size: 11px !important;
+            }}
+            .pnl-amount {{
+                font-size: 11px !important;
+            }}
+            .subtable-desc {{
+                max-width: 120px;
+            }}
+            .ratio-bar-track {{
+                width: 38px;
+                height: 3.5px;
+            }}
+            .ratio-label {{
+                font-size: 8.5px;
+            }}
+            .theme-name-cell {{
+                gap: 6px;
+            }}
+        }}
+
+        @media (max-width: 400px) {{
+            thead th, tbody td, tfoot .total-row td {{
+                padding: 6px 5px !important;
+                font-size: 10px !important;
+            }}
+            .num, .pnl-amount {{
+                font-size: 10.5px !important;
+            }}
+            .ticker-pill {{
+                padding: 1px 4px;
+                font-size: 10px;
+            }}
+            .subtable-desc {{
+                max-width: 85px;
+                font-size: 10px;
+            }}
+            .drilldown-hint {{
+                display: none !important;
+            }}
+            .ratio-bar-track {{
+                width: 30px;
             }}
         }}
 
@@ -856,100 +1053,77 @@ def generate_html_report(
             </div>
         </header>
 
-        <!-- 2-Column Split Dashboard -->
-        <main class="dashboard-grid">
-            <!-- Left Side: Themes List -->
-            <div class="card" id="themes-card">
-                <div class="card-header">
-                    <h2>
-                        <span>Themes</span>
-                        <span class="badge neutral" id="themes-count-badge">0</span>
-                    </h2>
-                    <span style="font-size: 11px; color: var(--text-muted);">Click theme or total row</span>
+        <!-- Unified Single-View Dashboard Container -->
+        <main class="card" id="dashboard-card">
+            <!-- Card Header: Breadcrumbs / Title + View Switcher -->
+            <div class="card-header">
+                <div class="breadcrumb-nav">
+                    <button id="btn-back-to-themes" class="btn-drilldown-back" onclick="drillUpToThemes()" style="display: none;" title="Return to All Themes overview">
+                        ← All Themes
+                    </button>
+                    <div class="breadcrumb-title" id="current-view-title">
+                        <span>All Themes</span>
+                    </div>
+                    <span id="view-pnl-pill" class="badge" style="display: none;"></span>
+                    <span id="view-count-pill" class="badge neutral"></span>
                 </div>
-                <div class="search-box">
-                    <input id="theme-search" type="text" placeholder="Search themes..." oninput="filterThemes(this.value)">
-                </div>
-                <div class="table-container">
-                    <table id="themes-table">
-                        <thead>
-                            <tr>
-                                <th>Theme</th>
-                                <th style="text-align:center;">Assets</th>
-                                <th class="num col-hide-mobile">Realized</th>
-                                <th class="num col-hide-mobile">Unrealized</th>
-                                <th class="num">Net PnL</th>
-                            </tr>
-                        </thead>
-                        <tbody id="themes-tbody">
-                            <!-- Populated dynamically via JavaScript -->
-                        </tbody>
-                        <tfoot>
-                            <tr class="total-row" id="total-portfolio-row" onclick="selectTotalPortfolio(true)" title="Click to view Top 9 Winners & 9 Losers across all themes">
-                                <td>
-                                    <div class="theme-name-cell" style="font-weight: 700;">
-                                        <span class="theme-indicator" style="background: var(--color-accent);"></span>
-                                        <span>Total Portfolio</span>
-                                    </div>
-                                </td>
-                                <td style="text-align:center;"><span class="badge neutral" id="total-assets-badge" style="font-weight: 700;">0</span></td>
-                                <td class="num col-hide-mobile" id="total-realized-cell" style="font-weight: 700;">€0.00</td>
-                                <td class="num col-hide-mobile" id="total-unrealized-cell" style="font-weight: 700;">€0.00</td>
-                                <td class="num" id="total-net-cell" style="font-weight: 700;">
-                                    <!-- Ratio bar for total -->
-                                </td>
-                            </tr>
-                        </tfoot>
-                    </table>
+
+                <!-- Segmented View Switcher: Table vs Graph -->
+                <div class="view-switcher" role="tablist">
+                    <button id="view-btn-table" class="view-btn active" onclick="switchView('table')" title="Switch to Table View">
+                        <span>☷</span>
+                        <span>Table</span>
+                    </button>
+                    <button id="view-btn-graph" class="view-btn" onclick="switchView('graph')" title="Switch to Graph View">
+                        <span>📊</span>
+                        <span>Graph</span>
+                    </button>
                 </div>
             </div>
 
-            <!-- Right Side: Interactive Ticker Contribution Chart & Details -->
-            <div class="sticky-panel" id="details-card">
-                <div class="card">
-                    <div class="card-header">
-                        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                            <button class="btn-back-mobile" onclick="scrollToThemes()">↑ Themes</button>
-                            <h2 id="active-theme-title">{top_theme}</h2>
-                            <span id="theme-pnl-pill" class="badge"></span>
-                            <span id="theme-asset-pill" class="badge neutral"></span>
-                        </div>
-                    </div>
+            <!-- Toolbar: Ticker Search Bar & Performer Highlights -->
+            <div class="toolbar">
+                <div class="ticker-search-box">
+                    <input id="ticker-search" type="text" placeholder="Search ticker or company (e.g. NVDA, Airbus, Boeing)..." oninput="handleTickerSearch(this.value)">
+                    <button id="search-clear-btn" class="search-clear-btn" onclick="clearTickerSearch()" title="Clear search">✕</button>
+                </div>
 
-                    <!-- Performer Badges & Chart Legend (Sort buttons removed) -->
-                    <div class="controls-toolbar">
-                        <div class="performer-highlights" id="performer-highlights">
-                            <!-- Populated dynamically: Best / Worst -->
-                        </div>
-                        <div class="chart-legend">
-                            <span class="legend-item"><span class="legend-swatch realized-swatch"></span> Realized</span>
-                            <span class="legend-item"><span class="legend-swatch unrealized-swatch"></span> Unrealized</span>
-                            <span class="legend-item"><span class="legend-diamond">◆</span> Net PnL</span>
-                        </div>
+                <div class="toolbar-right">
+                    <div class="performer-highlights" id="performer-highlights">
+                        <!-- Populated dynamically: Best / Worst -->
                     </div>
-                    
-                    <!-- Plotly Chart -->
-                    <div class="chart-wrapper">
-                        <div id="ticker-chart"></div>
-                    </div>
+                </div>
+            </div>
 
-                    <!-- Individual Ticker Sub-Table -->
-                    <div class="subtable-container">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Ticker</th>
-                                    <th>Description</th>
-                                    <th class="num col-hide-mobile">Realized</th>
-                                    <th class="num col-hide-mobile">Unrealized</th>
-                                    <th class="num">Net PnL</th>
-                                </tr>
-                            </thead>
-                            <tbody id="ticker-tbody">
-                                <!-- Populated dynamically by JavaScript -->
-                            </tbody>
-                        </table>
+            <!-- Viewport 1: Table View -->
+            <div id="table-view-container" class="table-container">
+                <table id="main-table">
+                    <thead id="table-head">
+                        <!-- Rendered dynamically depending on level (Themes vs Tickers) -->
+                    </thead>
+                    <tbody id="table-body">
+                        <!-- Rendered dynamically -->
+                    </tbody>
+                    <tfoot id="table-foot">
+                        <!-- Rendered dynamically (Total Portfolio row at Themes level) -->
+                    </tfoot>
+                </table>
+            </div>
+
+            <!-- Viewport 2: Graph View -->
+            <div id="graph-view-container" class="chart-view-panel" style="display: none;">
+                <div class="chart-legend">
+                    <div class="chart-click-hint" id="chart-click-hint">
+                        <span>💡 Tip: Click on any bar to drill down</span>
                     </div>
+                    <div class="legend-items">
+                        <span class="legend-item"><span class="legend-swatch realized-swatch"></span> Realized</span>
+                        <span class="legend-item"><span class="legend-swatch unrealized-swatch"></span> Unrealized</span>
+                        <span class="legend-item"><span class="legend-diamond">◆</span> Net PnL</span>
+                    </div>
+                </div>
+                <div class="chart-wrapper">
+                    <div id="main-chart"></div>
                 </div>
             </div>
         </main>
@@ -959,16 +1133,16 @@ def generate_html_report(
         // Data passed from Python
         const TICKER_DATA = {ticker_json};
 
-        let currentTheme = "{top_theme}";
-        let isTotalPortfolioView = false;
-        let showActiveOnly = false;
-        let searchQuery = "";
-        let currentThemeList = [];
-        let windowChartTickers = [];
+        // Application State
+        let currentMode = 'table';         // 'table' | 'graph'
+        let drilldownTheme = null;         // null (All Themes) | string (Theme Name) | '__TOTAL__' (Total Portfolio)
+        let tickerSearchQuery = '';        // Active search filter for tickers
+        let showActiveOnly = false;        // Toggle active/open positions only
+        let currentThemeList = [];         // Aggregated themes list
 
         function escapeHtml(s) {{
             return String(s == null ? '' : s).replace(/[&<>"']/g, c => (
-                {{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}}[c]
+                {{'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}}[c]
             ));
         }}
 
@@ -977,7 +1151,7 @@ def generate_html_report(
             return sign + Math.abs(val).toLocaleString('en-US', {{ minimumFractionDigits: 2, maximumFractionDigits: 2 }});
         }}
 
-        /* Meaningful Win/Loss & Realized/Unrealized Ratio Component */
+        /* Win/Loss & Realized/Unrealized Ratio Component */
         function renderRatioBar(realized, unrealized, total) {{
             const isPosTotal = total >= 0;
             const posPart = (realized > 0 ? realized : 0) + (unrealized > 0 ? unrealized : 0);
@@ -988,7 +1162,6 @@ def generate_html_report(
             let tooltip = '';
 
             if (posPart > 0 && negPart > 0) {{
-                // Mixed: True Win vs Loss ratio
                 const totalGross = posPart + negPart;
                 const winPct = Math.round((posPart / totalGross) * 100);
                 const lossPct = 100 - winPct;
@@ -1000,7 +1173,6 @@ def generate_html_report(
                 `;
                 label = `${{ratio}}x W/L`;
             }} else if (posPart > 0) {{
-                // Pure Gain: Realized (locked profit) vs Unrealized (open paper gain)
                 const realPct = Math.round((Math.max(0, realized) / posPart) * 100);
                 const unrealPct = 100 - realPct;
                 tooltip = `100% Gains • Realized: +€${{realized.toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}})}} (${{realPct}}%) | Unrealized: +€${{unrealized.toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}})}} (${{unrealPct}}%)`;
@@ -1010,7 +1182,6 @@ def generate_html_report(
                 `;
                 label = `${{realPct}}% locked`;
             }} else if (negPart > 0) {{
-                // Pure Loss: Realized (booked loss) vs Unrealized (open paper drawdown)
                 const realPct = Math.round((Math.abs(Math.min(0, realized)) / negPart) * 100);
                 const unrealPct = 100 - realPct;
                 tooltip = `100% Loss • Realized: -€${{Math.abs(realized).toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}})}} (${{realPct}}%) | Unrealized: -€${{Math.abs(unrealized).toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}})}} (${{unrealPct}}%)`;
@@ -1038,7 +1209,7 @@ def generate_html_report(
             `;
         }}
 
-        /* Theme & Portfolio Aggregation */
+        /* Data Helpers */
         function getFilteredTickers() {{
             if (showActiveOnly) {{
                 return TICKER_DATA.filter(t => t.IsActive);
@@ -1100,66 +1271,73 @@ def generate_html_report(
 
             const countEl = document.getElementById('kpi-holdings-count');
             countEl.innerText = `${{totalHoldings}} Assets`;
-
-            // Update Total Portfolio Row in the themes table footer
-            updateTotalPortfolioRow(totalPnl, totalRealized, totalUnrealized, totalHoldings);
         }}
 
-        function updateTotalPortfolioRow(totalPnl, totalRealized, totalUnrealized, totalAssets) {{
-            const totalNetCell = document.getElementById('total-net-cell');
-            const totalRealizedCell = document.getElementById('total-realized-cell');
-            const totalUnrealizedCell = document.getElementById('total-unrealized-cell');
-            const totalAssetsBadge = document.getElementById('total-assets-badge');
+        /* View Switching (Table ⇄ Graph) */
+        function switchView(mode) {{
+            if (currentMode === mode) return;
+            currentMode = mode;
+            const btnTable = document.getElementById('view-btn-table');
+            const btnGraph = document.getElementById('view-btn-graph');
+            const tableContainer = document.getElementById('table-view-container');
+            const graphContainer = document.getElementById('graph-view-container');
 
-            if (totalAssetsBadge) totalAssetsBadge.innerText = totalAssets;
-            if (totalRealizedCell) totalRealizedCell.innerText = `€${{totalRealized.toLocaleString('en-US', {{ minimumFractionDigits: 2, maximumFractionDigits: 2 }})}}`;
-            if (totalUnrealizedCell) totalUnrealizedCell.innerText = `€${{totalUnrealized.toLocaleString('en-US', {{ minimumFractionDigits: 2, maximumFractionDigits: 2 }})}}`;
-            if (totalNetCell) {{
-                totalNetCell.innerHTML = renderRatioBar(totalRealized, totalUnrealized, totalPnl);
+            if (mode === 'table') {{
+                btnTable.classList.add('active');
+                btnGraph.classList.remove('active');
+                tableContainer.style.display = 'block';
+                graphContainer.style.display = 'none';
+            }} else {{
+                btnGraph.classList.add('active');
+                btnTable.classList.remove('active');
+                tableContainer.style.display = 'none';
+                graphContainer.style.display = 'flex';
+            }}
+
+            // Re-render current level (theme or ticker drilldown) synchronously in new view
+            renderDashboard();
+
+            // Ensure graph dimensions are calculated cleanly after unhiding
+            if (mode === 'graph') {{
+                setTimeout(() => {{
+                    Plotly.Plots.resize('main-chart');
+                }}, 30);
             }}
         }}
 
-        function renderThemesTable() {{
-            const tbody = document.getElementById('themes-tbody');
-            const q = searchQuery.toLowerCase().trim();
-            const filteredThemes = currentThemeList.filter(t => t.Theme.toLowerCase().includes(q));
-
-            if (filteredThemes.length === 0) {{
-                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--text-muted); padding:24px 10px;">No themes found matching "${{escapeHtml(searchQuery)}}"</td></tr>`;
-                document.getElementById('themes-count-badge').innerText = '0';
-                return;
-            }}
-
-            let rowsHtml = '';
-            filteredThemes.forEach(row => {{
-                const pnl = row.TotalFifoPnl;
-                const indicatorColor = pnl >= 0 ? "var(--color-positive)" : "var(--color-negative)";
-                const ratioHtml = renderRatioBar(row.RealizedPnl, row.UnrealizedPnl, pnl);
-                const isActive = row.Theme === currentTheme && !isTotalPortfolioView;
-
-                rowsHtml += `
-                    <tr class="theme-row ${{isActive ? 'active' : ''}}" data-theme="${{escapeHtml(row.Theme)}}" onclick="selectTheme('${{escapeHtml(row.Theme)}}', true)">
-                        <td>
-                            <div class="theme-name-cell">
-                                <span class="theme-indicator" style="background: ${{indicatorColor}};"></span>
-                                <span>${{escapeHtml(row.Theme)}}</span>
-                            </div>
-                        </td>
-                        <td style="text-align:center;"><span class="badge neutral" title="${{row.WinningAssets}} winning / ${{row.LosingAssets}} losing assets">${{row.AssetCount}}</span></td>
-                        <td class="num col-hide-mobile">€${{row.RealizedPnl.toLocaleString('en-US', {{ minimumFractionDigits: 2, maximumFractionDigits: 2 }})}}</td>
-                        <td class="num col-hide-mobile">€${{row.UnrealizedPnl.toLocaleString('en-US', {{ minimumFractionDigits: 2, maximumFractionDigits: 2 }})}}</td>
-                        <td class="num">${{ratioHtml}}</td>
-                    </tr>
-                `;
-            }});
-
-            tbody.innerHTML = rowsHtml;
-            document.getElementById('themes-count-badge').innerText = filteredThemes.length;
+        /* Drill-down Navigation Functions */
+        function drillDownToTheme(themeName) {{
+            drilldownTheme = themeName;
+            renderDashboard();
         }}
 
-        function filterThemes(val) {{
-            searchQuery = val;
-            renderThemesTable();
+        function drillDownToTotalPortfolio() {{
+            drilldownTheme = '__TOTAL__';
+            renderDashboard();
+        }}
+
+        function drillUpToThemes() {{
+            drilldownTheme = null;
+            renderDashboard();
+        }}
+
+        /* Ticker Search Handling */
+        function handleTickerSearch(val) {{
+            tickerSearchQuery = val.trim();
+            const clearBtn = document.getElementById('search-clear-btn');
+            if (clearBtn) {{
+                clearBtn.style.display = tickerSearchQuery.length > 0 ? 'inline-block' : 'none';
+            }}
+            renderDashboard();
+        }}
+
+        function clearTickerSearch() {{
+            tickerSearchQuery = '';
+            const input = document.getElementById('ticker-search');
+            if (input) input.value = '';
+            const clearBtn = document.getElementById('search-clear-btn');
+            if (clearBtn) clearBtn.style.display = 'none';
+            renderDashboard();
         }}
 
         function toggleActiveFilter(isActive) {{
@@ -1167,112 +1345,7 @@ def generate_html_report(
             refreshDataAndViews();
         }}
 
-        function selectTheme(themeName, isUserClick = false) {{
-            isTotalPortfolioView = false;
-            currentTheme = themeName;
-
-            document.querySelectorAll('.theme-row').forEach(r => {{
-                if (r.getAttribute('data-theme') === themeName) {{
-                    r.classList.add('active');
-                }} else {{
-                    r.classList.remove('active');
-                }}
-            }});
-            const totalRow = document.getElementById('total-portfolio-row');
-            if (totalRow) totalRow.classList.remove('active');
-
-            renderActiveView();
-
-            if (isUserClick && window.innerWidth <= 960) {{
-                document.getElementById('details-card').scrollIntoView({{ behavior: 'smooth', block: 'start' }});
-            }}
-        }}
-
-        function selectTotalPortfolio(isUserClick = false) {{
-            isTotalPortfolioView = true;
-
-            document.querySelectorAll('.theme-row').forEach(r => r.classList.remove('active'));
-            const totalRow = document.getElementById('total-portfolio-row');
-            if (totalRow) totalRow.classList.add('active');
-
-            renderActiveView();
-
-            if (isUserClick && window.innerWidth <= 960) {{
-                document.getElementById('details-card').scrollIntoView({{ behavior: 'smooth', block: 'start' }});
-            }}
-        }}
-
-        function scrollToThemes() {{
-            document.getElementById('themes-card').scrollIntoView({{ behavior: 'smooth', block: 'start' }});
-        }}
-
-        function renderActiveView() {{
-            const availableTickers = getFilteredTickers();
-            let title = "";
-            let pnlVal = 0;
-            let assetCount = 0;
-            let tickersToDisplay = [];
-
-            if (isTotalPortfolioView) {{
-                const filterTag = showActiveOnly ? "Active" : "Portfolio";
-                title = `Total Portfolio (${{filterTag}} • Top 9 Winners & 9 Losers)`;
-                pnlVal = Math.round(availableTickers.reduce((acc, t) => acc + t.TotalFifoPnl, 0) * 100) / 100;
-                assetCount = availableTickers.length;
-
-                // Pick Top 9 Winners & Top 9 Losers across the portfolio
-                const sortedByPnl = [...availableTickers].sort((a, b) => b.TotalFifoPnl - a.TotalFifoPnl);
-                const winners = sortedByPnl.filter(t => t.TotalFifoPnl > 0);
-                const losers = sortedByPnl.filter(t => t.TotalFifoPnl < 0);
-
-                const top9Winners = winners.slice(0, 9);
-                const top9Losers = losers.slice(-9); // Worst 9 most negative performers
-
-                const seen = new Set();
-                tickersToDisplay = [];
-                [...top9Winners, ...top9Losers].forEach(item => {{
-                    if (!seen.has(item.UnderlyingSymbol)) {{
-                        seen.add(item.UnderlyingSymbol);
-                        tickersToDisplay.push(item);
-                    }}
-                }});
-            }} else {{
-                const themeObj = currentThemeList.find(t => t.Theme === currentTheme) || {{
-                    Theme: currentTheme,
-                    TotalFifoPnl: 0,
-                    RealizedPnl: 0,
-                    UnrealizedPnl: 0,
-                    AssetCount: 0
-                }};
-                title = themeObj.Theme;
-                pnlVal = themeObj.TotalFifoPnl;
-                assetCount = themeObj.AssetCount;
-                tickersToDisplay = availableTickers.filter(t => t.Theme === currentTheme);
-                // Standard default sort: Net PnL descending
-                tickersToDisplay.sort((a, b) => b.TotalFifoPnl - a.TotalFifoPnl);
-            }}
-
-            // Update Header & Badges
-            document.getElementById('active-theme-title').innerText = title;
-            const pnlPill = document.getElementById('theme-pnl-pill');
-            pnlPill.innerText = "Net " + formatCurrency(pnlVal);
-            pnlPill.className = "badge " + (pnlVal >= 0 ? "positive" : "negative");
-
-            const assetPill = document.getElementById('theme-asset-pill');
-            assetPill.innerText = isTotalPortfolioView 
-                ? `${{tickersToDisplay.length}} of ${{assetCount}} Assets` 
-                : `${{assetCount}} Tickers`;
-
-            // Render Performer Highlights (Best & Worst)
-            renderPerformerHighlights(tickersToDisplay);
-
-            // Chart rendering order: reversed so highest performer is visually at the top
-            windowChartTickers = [...tickersToDisplay];
-            renderPlotlyChart(windowChartTickers);
-
-            // Subtable rendering order: highest performer at top
-            renderSubTable(tickersToDisplay);
-        }}
-
+        /* Performer Highlights */
         function renderPerformerHighlights(tickers) {{
             const container = document.getElementById('performer-highlights');
             if (!tickers || tickers.length === 0) {{
@@ -1308,157 +1381,218 @@ def generate_html_report(
             container.innerHTML = html;
         }}
 
-        function renderPlotlyChart(tickers) {{
-            if (!tickers || tickers.length === 0) {{
-                Plotly.purge('ticker-chart');
-                document.getElementById('ticker-chart').innerHTML = '<div style="color: var(--text-muted); padding: 30px; text-align: center; font-size: 12px;">No individual ticker data found.</div>';
+        /* Master Render Controller */
+        function renderDashboard() {{
+            const availableTickers = getFilteredTickers();
+            const searchQ = tickerSearchQuery.toLowerCase();
+            const isSearching = searchQ.length > 0;
+
+            const backBtn = document.getElementById('btn-back-to-themes');
+            const titleEl = document.getElementById('current-view-title');
+            const pnlPill = document.getElementById('view-pnl-pill');
+            const countPill = document.getElementById('view-count-pill');
+            const clickHint = document.getElementById('chart-click-hint');
+
+            // CASE A: Search active across entire portfolio (when not inside a specific theme)
+            if (isSearching && !drilldownTheme) {{
+                backBtn.style.display = 'inline-flex';
+                titleEl.innerHTML = `<span>Ticker Search: "${{escapeHtml(tickerSearchQuery)}}"</span>`;
+                clickHint.style.display = 'none';
+
+                const matchedTickers = availableTickers.filter(t => 
+                    t.UnderlyingSymbol.toLowerCase().includes(searchQ) ||
+                    (t.Description && t.Description.toLowerCase().includes(searchQ))
+                );
+                matchedTickers.sort((a, b) => b.TotalFifoPnl - a.TotalFifoPnl);
+
+                const totalMatchedPnl = Math.round(matchedTickers.reduce((acc, t) => acc + t.TotalFifoPnl, 0) * 100) / 100;
+                pnlPill.style.display = 'inline-flex';
+                pnlPill.innerText = "Net " + formatCurrency(totalMatchedPnl);
+                pnlPill.className = "badge " + (totalMatchedPnl >= 0 ? "positive" : "negative");
+                countPill.innerText = `${{matchedTickers.length}} Matched Tickers`;
+
+                renderPerformerHighlights(matchedTickers);
+
+                if (currentMode === 'table') {{
+                    renderTickersTable(matchedTickers, true);
+                }} else {{
+                    renderTickersGraph(matchedTickers);
+                }}
                 return;
             }}
 
-            const isLight = document.documentElement.getAttribute('data-theme') === 'light';
-            const width = window.innerWidth;
-            const isTiny = width <= 480;
-            const isSmall = width <= 768;
+            // CASE B: Drilled down into Total Portfolio View
+            if (drilldownTheme === '__TOTAL__') {{
+                backBtn.style.display = 'inline-flex';
+                titleEl.innerHTML = `<span>Total Portfolio Drilldown</span>`;
+                clickHint.style.display = 'none';
 
-            // Invert array so highest rank is displayed at top of vertical axis
-            const chartData = [...tickers].reverse();
-            const ySymbols = chartData.map(t => t.UnderlyingSymbol);
-            const descriptions = chartData.map(t => t.Description);
+                let tickers = [...availableTickers];
+                if (isSearching) {{
+                    tickers = tickers.filter(t => 
+                        t.UnderlyingSymbol.toLowerCase().includes(searchQ) ||
+                        (t.Description && t.Description.toLowerCase().includes(searchQ))
+                    );
+                }}
 
-            // Responsive sizing per screen tier
-            let barHeight, dynamicHeight, markerSize, fontSize, yFontSize, xFontSize, margins;
-            if (isTiny) {{
-                barHeight = 16;
-                dynamicHeight = Math.max(140, Math.min(260, chartData.length * barHeight + 40));
-                markerSize = 6;
-                fontSize = 10;
-                yFontSize = 10;
-                xFontSize = 9;
-                margins = {{ l: 48, r: 10, t: 8, b: 22 }};
-            }} else if (isSmall) {{
-                barHeight = 19;
-                dynamicHeight = Math.max(170, Math.min(320, chartData.length * barHeight + 48));
-                markerSize = 7;
-                fontSize = 11;
-                yFontSize = 11;
-                xFontSize = 10;
-                margins = {{ l: 58, r: 14, t: 10, b: 24 }};
-            }} else {{
-                barHeight = 25;
-                dynamicHeight = Math.max(220, Math.min(520, chartData.length * barHeight + 58));
-                markerSize = 9;
-                fontSize = 12;
-                yFontSize = 12;
-                xFontSize = 11;
-                margins = {{ l: 78, r: 18, t: 14, b: 28 }};
+                tickers.sort((a, b) => b.TotalFifoPnl - a.TotalFifoPnl);
+                const totalPnl = Math.round(tickers.reduce((acc, t) => acc + t.TotalFifoPnl, 0) * 100) / 100;
+
+                pnlPill.style.display = 'inline-flex';
+                pnlPill.innerText = "Net " + formatCurrency(totalPnl);
+                pnlPill.className = "badge " + (totalPnl >= 0 ? "positive" : "negative");
+                countPill.innerText = `${{tickers.length}} Assets`;
+
+                renderPerformerHighlights(tickers);
+
+                if (currentMode === 'table') {{
+                    renderTickersTable(tickers, true);
+                }} else {{
+                    renderTickersGraph(tickers);
+                }}
+                return;
             }}
 
-            // Realized Trace
-            const traceRealized = {{
-                type: 'bar',
-                orientation: 'h',
-                name: 'Realized',
-                y: ySymbols,
-                x: chartData.map(t => t.RealizedPnl),
-                marker: {{
-                    color: chartData.map(t => t.RealizedPnl >= 0 ? '#16a34a' : '#dc2626'),
-                    line: {{ width: 0 }}
-                }},
-                customdata: descriptions,
-                hovertemplate: '<b>%{{y}}</b> (%{{customdata}})<br>Realized: <b>€%{{x:,.2f}}</b><extra></extra>'
-            }};
+            // CASE C: Drilled down into a Specific Theme
+            if (drilldownTheme) {{
+                backBtn.style.display = 'inline-flex';
+                titleEl.innerHTML = `<span>${{escapeHtml(drilldownTheme)}}</span>`;
+                clickHint.style.display = 'none';
 
-            // Unrealized Trace
-            const traceUnrealized = {{
-                type: 'bar',
-                orientation: 'h',
-                name: 'Unrealized',
-                y: ySymbols,
-                x: chartData.map(t => t.UnrealizedPnl),
-                marker: {{
-                    color: chartData.map(t => t.UnrealizedPnl >= 0 ? '#4ade80' : '#f87171'),
-                    line: {{ width: 0 }}
-                }},
-                customdata: descriptions,
-                hovertemplate: '<b>%{{y}}</b> (%{{customdata}})<br>Unrealized: <b>€%{{x:,.2f}}</b><extra></extra>'
-            }};
-
-            // Net PnL Diamond Marker
-            const traceNet = {{
-                type: 'scatter',
-                mode: 'markers',
-                orientation: 'h',
-                name: 'Net PnL',
-                y: ySymbols,
-                x: chartData.map(t => t.TotalFifoPnl),
-                marker: {{
-                    symbol: 'diamond',
-                    size: markerSize,
-                    color: chartData.map(t => t.TotalFifoPnl >= 0 ? '#10b981' : '#f43f5e'),
-                    line: {{
-                        color: isLight ? '#0f172a' : '#ffffff',
-                        width: isTiny ? 1 : 1.5
-                    }}
-                }},
-                customdata: descriptions,
-                hovertemplate: '<b>%{{y}}</b> (%{{customdata}})<br>Net PnL: <b>€%{{x:,.2f}}</b><extra></extra>'
-            }};
-
-            const stackedPos = chartData.map(t => Math.max(0, t.RealizedPnl) + Math.max(0, t.UnrealizedPnl));
-            const stackedNeg = chartData.map(t => Math.min(0, t.RealizedPnl) + Math.min(0, t.UnrealizedPnl));
-            const netVals = chartData.map(t => t.TotalFifoPnl);
-
-            const minVal = Math.min(0, ...stackedNeg, ...netVals);
-            const maxVal = Math.max(0, ...stackedPos, ...netVals);
-            const span = (maxVal - minVal) || 100;
-            const xRange = [minVal - span * 0.08, maxVal + span * 0.08];
-
-            const layout = {{
-                barmode: 'relative',
-                bargap: isSmall ? 0.28 : 0.32,
-                height: dynamicHeight,
-                margin: margins,
-                showlegend: false,
-                paper_bgcolor: 'rgba(0,0,0,0)',
-                plot_bgcolor: 'rgba(0,0,0,0)',
-                font: {{
-                    family: 'Inter, sans-serif',
-                    color: isLight ? '#475569' : '#94a3b8',
-                    size: fontSize
-                }},
-                xaxis: {{
-                    range: xRange,
-                    gridcolor: isLight ? '#e2e8f0' : '#1e293b',
-                    zerolinecolor: isLight ? '#94a3b8' : '#475569',
-                    zerolinewidth: 1.5,
-                    tickprefix: '€',
-                    automargin: true,
-                    tickfont: {{ size: xFontSize }}
-                }},
-                yaxis: {{
-                    automargin: true,
-                    ticksuffix: '  ',
-                    tickfont: {{
-                        family: 'JetBrains Mono, monospace',
-                        size: yFontSize,
-                        color: isLight ? '#0f172a' : '#f8fafc',
-                        weight: 600
-                    }}
+                let tickers = availableTickers.filter(t => t.Theme === drilldownTheme);
+                if (isSearching) {{
+                    tickers = tickers.filter(t => 
+                        t.UnderlyingSymbol.toLowerCase().includes(searchQ) ||
+                        (t.Description && t.Description.toLowerCase().includes(searchQ))
+                    );
                 }}
-            }};
 
-            const config = {{
-                responsive: true,
-                displayModeBar: false
-            }};
+                tickers.sort((a, b) => b.TotalFifoPnl - a.TotalFifoPnl);
+                const themePnl = Math.round(tickers.reduce((acc, t) => acc + t.TotalFifoPnl, 0) * 100) / 100;
 
-            Plotly.react('ticker-chart', [traceRealized, traceUnrealized, traceNet], layout, config);
+                pnlPill.style.display = 'inline-flex';
+                pnlPill.innerText = "Net " + formatCurrency(themePnl);
+                pnlPill.className = "badge " + (themePnl >= 0 ? "positive" : "negative");
+                countPill.innerText = `${{tickers.length}} Tickers`;
+
+                renderPerformerHighlights(tickers);
+
+                if (currentMode === 'table') {{
+                    renderTickersTable(tickers, false);
+                }} else {{
+                    renderTickersGraph(tickers);
+                }}
+                return;
+            }}
+
+            // CASE D: Level 1 - All Themes Overview
+            backBtn.style.display = 'none';
+            pnlPill.style.display = 'none';
+            titleEl.innerHTML = `<span>All Themes</span>`;
+            countPill.innerText = `${{currentThemeList.length}} Themes`;
+            clickHint.style.display = 'inline-flex';
+
+            renderPerformerHighlights(availableTickers);
+
+            if (currentMode === 'table') {{
+                renderThemesTable();
+            }} else {{
+                renderThemesGraph();
+            }}
         }}
 
-        function renderSubTable(tickers) {{
-            const tbody = document.getElementById('ticker-tbody');
+        /* Table Rendering: Themes Overview */
+        function renderThemesTable() {{
+            const thead = document.getElementById('table-head');
+            const tbody = document.getElementById('table-body');
+            const tfoot = document.getElementById('table-foot');
+
+            thead.innerHTML = `
+                <tr>
+                    <th class="col-theme">Theme</th>
+                    <th class="col-assets" style="text-align:center;">Assets</th>
+                    <th class="num col-hide-mobile col-realized">Realized</th>
+                    <th class="num col-hide-mobile col-unrealized">Unrealized</th>
+                    <th class="num col-pnl">Net PnL</th>
+                </tr>
+            `;
+
+            if (currentThemeList.length === 0) {{
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--text-muted); padding:28px 10px;">No themes found.</td></tr>`;
+                tfoot.innerHTML = '';
+                return;
+            }}
+
+            let rowsHtml = '';
+            currentThemeList.forEach(row => {{
+                const pnl = row.TotalFifoPnl;
+                const indicatorColor = pnl >= 0 ? "var(--color-positive)" : "var(--color-negative)";
+                const ratioHtml = renderRatioBar(row.RealizedPnl, row.UnrealizedPnl, pnl);
+
+                rowsHtml += `
+                    <tr class="interactive-row" onclick="drillDownToTheme('${{escapeHtml(row.Theme)}}')">
+                        <td class="col-theme">
+                            <div class="theme-name-cell">
+                                <span class="theme-indicator" style="background: ${{indicatorColor}};"></span>
+                                <span>${{escapeHtml(row.Theme)}}</span>
+                                <span class="drilldown-hint">View Tickers →</span>
+                            </div>
+                        </td>
+                        <td class="col-assets" style="text-align:center;"><span class="badge neutral" title="${{row.WinningAssets}} winning / ${{row.LosingAssets}} losing assets">${{row.AssetCount}}</span></td>
+                        <td class="num col-hide-mobile col-realized">€${{row.RealizedPnl.toLocaleString('en-US', {{ minimumFractionDigits: 2, maximumFractionDigits: 2 }})}}</td>
+                        <td class="num col-hide-mobile col-unrealized">€${{row.UnrealizedPnl.toLocaleString('en-US', {{ minimumFractionDigits: 2, maximumFractionDigits: 2 }})}}</td>
+                        <td class="num col-pnl">${{ratioHtml}}</td>
+                    </tr>
+                `;
+            }});
+            tbody.innerHTML = rowsHtml;
+
+            // Render Total Portfolio row in Footer
+            const availableTickers = getFilteredTickers();
+            const totalPnl = Math.round(availableTickers.reduce((acc, t) => acc + t.TotalFifoPnl, 0) * 100) / 100;
+            const totalRealized = Math.round(availableTickers.reduce((acc, t) => acc + t.RealizedPnl, 0) * 100) / 100;
+            const totalUnrealized = Math.round(availableTickers.reduce((acc, t) => acc + t.UnrealizedPnl, 0) * 100) / 100;
+            const totalAssets = availableTickers.length;
+            const ratioHtmlTotal = renderRatioBar(totalRealized, totalUnrealized, totalPnl);
+
+            tfoot.innerHTML = `
+                <tr class="total-row" onclick="drillDownToTotalPortfolio()" title="Click to view all individual tickers in the portfolio">
+                    <td class="col-theme">
+                        <div class="theme-name-cell" style="font-weight: 700;">
+                            <span class="theme-indicator" style="background: var(--color-accent);"></span>
+                            <span>Total Portfolio</span>
+                            <span class="drilldown-hint">View All Tickers →</span>
+                        </div>
+                    </td>
+                    <td class="col-assets" style="text-align:center;"><span class="badge neutral" style="font-weight: 700;">${{totalAssets}}</span></td>
+                    <td class="num col-hide-mobile col-realized" style="font-weight: 700;">€${{totalRealized.toLocaleString('en-US', {{ minimumFractionDigits: 2, maximumFractionDigits: 2 }})}}</td>
+                    <td class="num col-hide-mobile col-unrealized" style="font-weight: 700;">€${{totalUnrealized.toLocaleString('en-US', {{ minimumFractionDigits: 2, maximumFractionDigits: 2 }})}}</td>
+                    <td class="num col-pnl" style="font-weight: 700;">${{ratioHtmlTotal}}</td>
+                </tr>
+            `;
+        }}
+
+        /* Table Rendering: Ticker Drilldown */
+        function renderTickersTable(tickers, showThemeColumn = false) {{
+            const thead = document.getElementById('table-head');
+            const tbody = document.getElementById('table-body');
+            const tfoot = document.getElementById('table-foot');
+            tfoot.innerHTML = '';
+
+            thead.innerHTML = `
+                <tr>
+                    <th class="col-ticker">Ticker</th>
+                    <th class="col-desc">Description</th>
+                    ${{showThemeColumn ? '<th class="col-theme-tag">Theme</th>' : ''}}
+                    <th class="num col-hide-mobile col-realized">Realized</th>
+                    <th class="num col-hide-mobile col-unrealized">Unrealized</th>
+                    <th class="num col-pnl">Net PnL</th>
+                </tr>
+            `;
+
             if (!tickers || tickers.length === 0) {{
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-muted); padding:20px;">No assets match current criteria.</td></tr>';
+                const colSpan = showThemeColumn ? 6 : 5;
+                tbody.innerHTML = `<tr><td colspan="${{colSpan}}" style="text-align:center; color:var(--text-muted); padding:28px 10px;">No tickers match the criteria.</td></tr>`;
                 return;
             }}
 
@@ -1467,27 +1601,247 @@ def generate_html_report(
                 const pnl = t.TotalFifoPnl;
                 const ticker = escapeHtml(t.UnderlyingSymbol);
                 const desc = escapeHtml(t.Description);
-                const themeTag = isTotalPortfolioView && t.Theme ? `<span style="font-size:10px; color:var(--text-muted); margin-left:4px;">[${{escapeHtml(t.Theme)}}]</span>` : '';
                 const activeDot = t.IsActive ? `<span class="active-dot" title="Active open position"></span>` : '';
                 const ratioHtml = renderRatioBar(t.RealizedPnl, t.UnrealizedPnl, pnl);
+                const themeTag = showThemeColumn && t.Theme 
+                    ? `<td class="col-theme-tag"><span class="theme-pill-tag" onclick="event.stopPropagation(); drillDownToTheme('${{escapeHtml(t.Theme)}}')">${{escapeHtml(t.Theme)}}</span></td>`
+                    : '';
 
                 rowsHtml += `
                     <tr>
-                        <td>
-                            <div style="display:flex; align-items:center; gap:5px;">
+                        <td class="col-ticker">
+                            <div style="display:flex; align-items:center; gap:6px;">
                                 ${{activeDot}}
                                 <span class="ticker-pill">${{ticker}}</span>
-                                ${{themeTag}}
                             </div>
                         </td>
-                        <td><div class="subtable-desc" title="${{desc}}">${{desc}}</div></td>
-                        <td class="num col-hide-mobile">€${{t.RealizedPnl.toLocaleString('en-US', {{ minimumFractionDigits: 2, maximumFractionDigits: 2 }})}}</td>
-                        <td class="num col-hide-mobile">€${{t.UnrealizedPnl.toLocaleString('en-US', {{ minimumFractionDigits: 2, maximumFractionDigits: 2 }})}}</td>
-                        <td class="num">${{ratioHtml}}</td>
+                        <td class="col-desc"><div class="subtable-desc" title="${{desc}}">${{desc}}</div></td>
+                        ${{themeTag}}
+                        <td class="num col-hide-mobile col-realized">€${{t.RealizedPnl.toLocaleString('en-US', {{ minimumFractionDigits: 2, maximumFractionDigits: 2 }})}}</td>
+                        <td class="num col-hide-mobile col-unrealized">€${{t.UnrealizedPnl.toLocaleString('en-US', {{ minimumFractionDigits: 2, maximumFractionDigits: 2 }})}}</td>
+                        <td class="num col-pnl">${{ratioHtml}}</td>
                     </tr>
                 `;
             }});
+
             tbody.innerHTML = rowsHtml;
+        }}
+
+        /* Graph Rendering: Themes Overview */
+        function renderThemesGraph() {{
+            if (currentMode !== 'graph') return;
+            const container = document.getElementById('main-chart');
+
+            if (!currentThemeList || currentThemeList.length === 0) {{
+                Plotly.purge(container);
+                container.innerHTML = '<div style="color: var(--text-muted); padding: 40px; text-align: center; font-size: 13px;">No themes data to display.</div>';
+                return;
+            }}
+
+            // Reverse for top-down descending visual hierarchy
+            const dataToChart = [...currentThemeList].reverse();
+            const yNames = dataToChart.map(t => t.Theme);
+            const realized = dataToChart.map(t => t.RealizedPnl);
+            const unrealized = dataToChart.map(t => t.UnrealizedPnl);
+            const net = dataToChart.map(t => t.TotalFifoPnl);
+
+            const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+            const textColor = isLight ? '#0f172a' : '#f8fafc';
+            const gridColor = isLight ? '#e2e8f0' : '#1e293b';
+
+            const traceRealized = {{
+                x: realized,
+                y: yNames,
+                name: 'Realized PnL',
+                type: 'bar',
+                orientation: 'h',
+                marker: {{
+                    color: realized.map(v => v >= 0 ? '#16a34a' : '#dc2626'),
+                    opacity: 0.85
+                }},
+                hovertemplate: '%{{y}}<br>Realized: €%{{x:,.2f}}<extra></extra>'
+            }};
+
+            const traceUnrealized = {{
+                x: unrealized,
+                y: yNames,
+                name: 'Unrealized PnL',
+                type: 'bar',
+                orientation: 'h',
+                marker: {{
+                    color: unrealized.map(v => v >= 0 ? '#4ade80' : '#f87171'),
+                    opacity: 0.75
+                }},
+                hovertemplate: '%{{y}}<br>Unrealized: €%{{x:,.2f}}<extra></extra>'
+            }};
+
+            const traceNet = {{
+                x: net,
+                y: yNames,
+                name: 'Net PnL',
+                type: 'scatter',
+                mode: 'markers',
+                marker: {{
+                    symbol: 'diamond',
+                    size: 8,
+                    color: net.map(v => v >= 0 ? '#10b981' : '#f43f5e'),
+                    line: {{ color: isLight ? '#ffffff' : '#0b1120', width: 1 }}
+                }},
+                hovertemplate: '%{{y}}<br><b>Net PnL: €%{{x:,.2f}}</b><extra></extra>'
+            }};
+
+            const layout = {{
+                barmode: 'relative',
+                autosize: true,
+                height: Math.max(480, dataToChart.length * 30 + 100),
+                margin: {{ l: 150, r: 35, t: 20, b: 35 }},
+                paper_bgcolor: 'transparent',
+                plot_bgcolor: 'transparent',
+                font: {{ family: 'Inter', color: textColor, size: 11 }},
+                showlegend: false,
+                xaxis: {{
+                    gridcolor: gridColor,
+                    zerolinecolor: isLight ? '#94a3b8' : '#475569',
+                    zerolinewidth: 1.5,
+                    tickfont: {{ color: textColor, family: 'JetBrains Mono', size: 10 }},
+                    tickprefix: '€',
+                    tickformat: ',.0f'
+                }},
+                yaxis: {{
+                    tickfont: {{ color: textColor, family: 'JetBrains Mono', size: 11, weight: 600 }},
+                    automargin: true
+                }},
+                hoverlabel: {{
+                    bgcolor: isLight ? '#ffffff' : '#1e293b',
+                    bordercolor: isLight ? '#cbd5e1' : '#334155',
+                    font: {{ color: textColor, family: 'JetBrains Mono', size: 11 }}
+                }}
+            }};
+
+            const config = {{
+                responsive: true,
+                displayModeBar: false
+            }};
+
+            Plotly.react(container, [traceRealized, traceUnrealized, traceNet], layout, config).then(() => {{
+                // Wire click-to-drilldown
+                if (container.removeAllListeners) {{
+                    container.removeAllListeners('plotly_click');
+                }}
+                container.on('plotly_click', (data) => {{
+                    if (!data || !data.points || data.points.length === 0) return;
+                    const clickedTheme = data.points[0].y;
+                    if (clickedTheme) {{
+                        drillDownToTheme(clickedTheme);
+                    }}
+                }});
+            }});
+        }}
+
+        /* Graph Rendering: Ticker Drilldown */
+        function renderTickersGraph(tickers) {{
+            if (currentMode !== 'graph') return;
+            const container = document.getElementById('main-chart');
+
+            if (!tickers || tickers.length === 0) {{
+                Plotly.purge(container);
+                container.innerHTML = '<div style="color: var(--text-muted); padding: 40px; text-align: center; font-size: 13px;">No tickers data to display.</div>';
+                return;
+            }}
+
+            // Reverse for top-down descending visual hierarchy
+            const dataToChart = [...tickers].reverse();
+            const yNames = dataToChart.map(t => t.UnderlyingSymbol);
+            const realized = dataToChart.map(t => t.RealizedPnl);
+            const unrealized = dataToChart.map(t => t.UnrealizedPnl);
+            const net = dataToChart.map(t => t.TotalFifoPnl);
+
+            const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+            const textColor = isLight ? '#0f172a' : '#f8fafc';
+            const gridColor = isLight ? '#e2e8f0' : '#1e293b';
+
+            const traceRealized = {{
+                x: realized,
+                y: yNames,
+                name: 'Realized PnL',
+                type: 'bar',
+                orientation: 'h',
+                marker: {{
+                    color: realized.map(v => v >= 0 ? '#16a34a' : '#dc2626'),
+                    opacity: 0.85
+                }},
+                customdata: dataToChart.map(t => t.Description),
+                hovertemplate: '<b>%{{y}}</b> (%{{customdata}})<br>Realized: €%{{x:,.2f}}<extra></extra>'
+            }};
+
+            const traceUnrealized = {{
+                x: unrealized,
+                y: yNames,
+                name: 'Unrealized PnL',
+                type: 'bar',
+                orientation: 'h',
+                marker: {{
+                    color: unrealized.map(v => v >= 0 ? '#4ade80' : '#f87171'),
+                    opacity: 0.75
+                }},
+                customdata: dataToChart.map(t => t.Description),
+                hovertemplate: '<b>%{{y}}</b> (%{{customdata}})<br>Unrealized: €%{{x:,.2f}}<extra></extra>'
+            }};
+
+            const traceNet = {{
+                x: net,
+                y: yNames,
+                name: 'Net PnL',
+                type: 'scatter',
+                mode: 'markers',
+                marker: {{
+                    symbol: 'diamond',
+                    size: 8,
+                    color: net.map(v => v >= 0 ? '#10b981' : '#f43f5e'),
+                    line: {{ color: isLight ? '#ffffff' : '#0b1120', width: 1 }}
+                }},
+                customdata: dataToChart.map(t => t.Description),
+                hovertemplate: '<b>%{{y}}</b> (%{{customdata}})<br><b>Net PnL: €%{{x:,.2f}}</b><extra></extra>'
+            }};
+
+            const layout = {{
+                barmode: 'relative',
+                autosize: true,
+                height: Math.max(480, dataToChart.length * 28 + 100),
+                margin: {{ l: 90, r: 35, t: 20, b: 35 }},
+                paper_bgcolor: 'transparent',
+                plot_bgcolor: 'transparent',
+                font: {{ family: 'Inter', color: textColor, size: 11 }},
+                showlegend: false,
+                xaxis: {{
+                    gridcolor: gridColor,
+                    zerolinecolor: isLight ? '#94a3b8' : '#475569',
+                    zerolinewidth: 1.5,
+                    tickfont: {{ color: textColor, family: 'JetBrains Mono', size: 10 }},
+                    tickprefix: '€',
+                    tickformat: ',.0f'
+                }},
+                yaxis: {{
+                    tickfont: {{ color: textColor, family: 'JetBrains Mono', size: 11, weight: 600 }},
+                    automargin: true
+                }},
+                hoverlabel: {{
+                    bgcolor: isLight ? '#ffffff' : '#1e293b',
+                    bordercolor: isLight ? '#cbd5e1' : '#334155',
+                    font: {{ color: textColor, family: 'JetBrains Mono', size: 11 }}
+                }}
+            }};
+
+            const config = {{
+                responsive: true,
+                displayModeBar: false
+            }};
+
+            Plotly.react(container, [traceRealized, traceUnrealized, traceNet], layout, config).then(() => {{
+                if (container.removeAllListeners) {{
+                    container.removeAllListeners('plotly_click');
+                }}
+            }});
         }}
 
         /* Light / Dark Mode Handling */
@@ -1521,8 +1875,8 @@ def generate_html_report(
                 if (label) label.innerText = 'Light';
             }}
 
-            if (windowChartTickers.length > 0) {{
-                renderPlotlyChart(windowChartTickers);
+            if (currentMode === 'graph') {{
+                renderDashboard();
             }}
         }}
 
@@ -1530,19 +1884,15 @@ def generate_html_report(
         function refreshDataAndViews() {{
             const availableTickers = getFilteredTickers();
             currentThemeList = aggregateThemes(availableTickers);
-
             updateKpis(availableTickers);
-            renderThemesTable();
 
-            // If selected theme no longer exists in current filtered theme list, select first available
-            if (!isTotalPortfolioView) {{
-                const themeExists = currentThemeList.some(t => t.Theme === currentTheme);
-                if (!themeExists && currentThemeList.length > 0) {{
-                    currentTheme = currentThemeList[0].Theme;
-                }}
+            // If selected theme no longer exists under current filter, reset to overview
+            if (drilldownTheme && drilldownTheme !== '__TOTAL__') {{
+                const exists = currentThemeList.some(t => t.Theme === drilldownTheme);
+                if (!exists) drilldownTheme = null;
             }}
 
-            renderActiveView();
+            renderDashboard();
         }}
 
         // Handle responsive window resize
@@ -1550,24 +1900,19 @@ def generate_html_report(
         window.addEventListener('resize', () => {{
             clearTimeout(resizeTimer);
             resizeTimer = setTimeout(() => {{
-                if (windowChartTickers && windowChartTickers.length > 0) {{
-                    renderPlotlyChart(windowChartTickers);
-                }} else {{
-                    const chartDiv = document.getElementById('ticker-chart');
+                if (currentMode === 'graph') {{
+                    const chartDiv = document.getElementById('main-chart');
                     if (chartDiv && chartDiv.data) {{
-                        Plotly.Plots.resize('ticker-chart');
+                        Plotly.Plots.resize('main-chart');
                     }}
                 }}
-            }}, 100);
+            }}, 120);
         }});
 
         // Initialization
         window.addEventListener('DOMContentLoaded', () => {{
             initThemeMode();
             refreshDataAndViews();
-            if (!isTotalPortfolioView && currentTheme) {{
-                selectTheme(currentTheme);
-            }}
         }});
     </script>
 </body>
