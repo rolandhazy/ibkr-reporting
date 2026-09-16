@@ -296,17 +296,69 @@ def generate_html_report(
 
         @media (max-width: 960px) {{
             .header {{
-                flex-direction: column;
-                align-items: stretch;
-                gap: 10px;
+                display: grid;
+                grid-template-columns: 1fr auto;
+                grid-template-areas:
+                    "brand controls"
+                    "kpi kpi";
+                gap: 8px 10px;
+                align-items: center;
+            }}
+            .brand-container {{
+                grid-area: brand;
             }}
             .header-right {{
-                justify-content: space-between;
+                display: contents;
+            }}
+            .header-controls {{
+                grid-area: controls;
+                justify-self: end;
             }}
             .kpi-strip {{
-                grid-template-columns: repeat(2, 1fr);
+                grid-area: kpi;
+                width: 100%;
+                grid-template-columns: repeat(4, 1fr);
                 gap: 8px 12px;
-                padding: 8px 12px;
+                padding: 8px 14px;
+            }}
+        }}
+
+        @media (max-width: 640px) {{
+            .kpi-strip {{
+                grid-template-columns: repeat(4, 1fr);
+                gap: 4px 6px;
+                padding: 6px 8px;
+                border-radius: 8px;
+            }}
+            .kpi-item {{
+                min-width: 0;
+            }}
+            .kpi-label {{
+                font-size: 8.5px !important;
+                letter-spacing: 0.01em !important;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }}
+            .kpi-val {{
+                font-size: 11.5px !important;
+                letter-spacing: -0.02em;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }}
+        }}
+
+        @media (max-width: 400px) {{
+            .kpi-strip {{
+                gap: 2px 4px;
+                padding: 5px 6px;
+            }}
+            .kpi-label {{
+                font-size: 8px !important;
+            }}
+            .kpi-val {{
+                font-size: 10.5px !important;
             }}
         }}
 
@@ -811,6 +863,20 @@ def generate_html_report(
             gap: 8px;
         }}
 
+        @media (max-width: 640px) {{
+            .chart-view-panel {{
+                padding: 6px 4px 10px 4px;
+            }}
+            .chart-legend {{
+                font-size: 10px !important;
+                padding: 2px 4px !important;
+                gap: 4px 8px !important;
+            }}
+            .chart-click-hint {{
+                font-size: 10px !important;
+            }}
+        }}
+
         .chart-legend {{
             display: flex;
             justify-content: space-between;
@@ -1046,7 +1112,7 @@ def generate_html_report(
 
                 <!-- KPI Strip -->
                 <div class="kpi-strip">
-                    <div class="kpi-item">
+                    <div class="kpi-item kpi-hero">
                         <span class="kpi-label">Net FIFO PnL</span>
                         <span class="kpi-val" id="kpi-net-pnl">€0.00</span>
                     </div>
@@ -1661,6 +1727,9 @@ def generate_html_report(
             const isLight = document.documentElement.getAttribute('data-theme') === 'light';
             const textColor = isLight ? '#0f172a' : '#f8fafc';
             const gridColor = isLight ? '#e2e8f0' : '#1e293b';
+            const isMobile = window.innerWidth <= 640;
+            const leftMargin = isMobile ? 70 : 85;
+            const rightMargin = isMobile ? 12 : 25;
 
             const traceRealized = {{
                 x: realized,
@@ -1706,8 +1775,8 @@ def generate_html_report(
             const layout = {{
                 barmode: 'relative',
                 autosize: true,
-                height: Math.max(480, dataToChart.length * 30 + 100),
-                margin: {{ l: 150, r: 35, t: 20, b: 35 }},
+                height: Math.max(isMobile ? 440 : 480, dataToChart.length * (isMobile ? 26 : 30) + 70),
+                margin: {{ l: leftMargin, r: rightMargin, t: 15, b: 30 }},
                 paper_bgcolor: 'transparent',
                 plot_bgcolor: 'transparent',
                 font: {{ family: 'Inter', color: textColor, size: 11 }},
@@ -1716,12 +1785,12 @@ def generate_html_report(
                     gridcolor: gridColor,
                     zerolinecolor: isLight ? '#94a3b8' : '#475569',
                     zerolinewidth: 1.5,
-                    tickfont: {{ color: textColor, family: 'JetBrains Mono', size: 10 }},
+                    tickfont: {{ color: textColor, family: 'JetBrains Mono', size: isMobile ? 9 : 10 }},
                     tickprefix: '€',
                     tickformat: ',.0f'
                 }},
                 yaxis: {{
-                    tickfont: {{ color: textColor, family: 'JetBrains Mono', size: 11, weight: 600 }},
+                    tickfont: {{ color: textColor, family: 'JetBrains Mono', size: isMobile ? 10 : 11, weight: 600 }},
                     automargin: true
                 }},
                 hoverlabel: {{
@@ -1791,6 +1860,9 @@ def generate_html_report(
             const isLight = document.documentElement.getAttribute('data-theme') === 'light';
             const textColor = isLight ? '#0f172a' : '#f8fafc';
             const gridColor = isLight ? '#e2e8f0' : '#1e293b';
+            const isMobile = window.innerWidth <= 640;
+            const leftMargin = isMobile ? 50 : 68;
+            const rightMargin = isMobile ? 12 : 25;
 
             const traceRealized = {{
                 x: realized,
@@ -1839,8 +1911,8 @@ def generate_html_report(
             const layout = {{
                 barmode: 'relative',
                 autosize: true,
-                height: Math.max(480, dataToChart.length * 28 + 100),
-                margin: {{ l: 90, r: 35, t: 20, b: 35 }},
+                height: Math.max(isMobile ? 440 : 480, dataToChart.length * (isMobile ? 26 : 30) + 70),
+                margin: {{ l: leftMargin, r: rightMargin, t: 15, b: 30 }},
                 paper_bgcolor: 'transparent',
                 plot_bgcolor: 'transparent',
                 font: {{ family: 'Inter', color: textColor, size: 11 }},
@@ -1849,12 +1921,12 @@ def generate_html_report(
                     gridcolor: gridColor,
                     zerolinecolor: isLight ? '#94a3b8' : '#475569',
                     zerolinewidth: 1.5,
-                    tickfont: {{ color: textColor, family: 'JetBrains Mono', size: 10 }},
+                    tickfont: {{ color: textColor, family: 'JetBrains Mono', size: isMobile ? 9 : 10 }},
                     tickprefix: '€',
                     tickformat: ',.0f'
                 }},
                 yaxis: {{
-                    tickfont: {{ color: textColor, family: 'JetBrains Mono', size: 11, weight: 600 }},
+                    tickfont: {{ color: textColor, family: 'JetBrains Mono', size: isMobile ? 10 : 11, weight: 600 }},
                     automargin: true
                 }},
                 hoverlabel: {{
@@ -1933,10 +2005,7 @@ def generate_html_report(
             clearTimeout(resizeTimer);
             resizeTimer = setTimeout(() => {{
                 if (currentMode === 'graph') {{
-                    const chartDiv = document.getElementById('main-chart');
-                    if (chartDiv && chartDiv.data) {{
-                        Plotly.Plots.resize('main-chart');
-                    }}
+                    renderDashboard();
                 }}
             }}, 120);
         }});
