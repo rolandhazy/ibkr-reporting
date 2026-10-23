@@ -16,7 +16,7 @@ THEME_MAP = {
     'Materials': ['BAS', 'LXS', 'ALB', 'LIN', 'SIKA', 'SOLB', 'MP', 'REB', 'USAR', 'LYI', 'ILZ', 'RNF', 'SJ60', 'N14', 'NCH2'],
     'Industrials': ['ACS', 'KGX', 'DHI', 'LEN', 'WY', 'ALO', 'LIGHT', 'LCID', 'CON', 'STLA', '7203', 'COLO', 'GM'],
     'Hedges': ['SPY', 'QQQ', 'QQQM', 'XSP', 'VIX', 'IWM', 'ESTX50', 'SPX', 'DJ600', 'MEME'],
-    'Broad Market': ['RSP', 'FEZ', 'EWJ', 'EEM', 'ILF', 'XCS4', 'IBZL', 'XDJP', 'SXRZ', 'IKRA', 'MEUD', 'CS1', 'LYXIB', 'VGK', 'EXS1'],
+    'Broad Market': ['RSP', 'FEZ', 'EWJ', 'EEM', 'ILF', 'XCS4', 'IBZL', 'XDJP', 'SXRZ', 'IKRA', 'MEUD', 'CS1', 'LYXIB', 'VGK', 'EXS1', 'XND'],
     'Commodities': ['GLD', 'SLV', 'IBIT', 'DBA'],
     'FX & FI': ['USD.HUF', 'AUD', 'CHF', 'GBP', 'HUF', 'NOK', 'JPY', 'USD', 'TLT']
 }
