@@ -39,7 +39,36 @@ def extract_statement_metadata(xml_data: str) -> dict:
     return meta
 
 
-def parse_xml_to_df(xml_data: str) -> pd.DataFrame:
+def sample_portfolio(
+    df: pd.DataFrame,
+    sample_rate: float = 0.3,
+    random_state: int | None = None,
+) -> pd.DataFrame:
+    """Randomly sample a fraction of portfolio assets.
+
+    Args:
+        df: Portfolio DataFrame.
+        sample_rate: Fraction of records to sample (default: 0.3).
+        random_state: Seed for reproducible sampling, or None for fresh randomness (default: None).
+
+    Returns:
+        Sampled DataFrame.
+    """
+    if df.empty or sample_rate >= 1.0:
+        return df
+    if sample_rate <= 0.0:
+        return df.iloc[0:0].copy()
+
+    sampled = df.sample(frac=sample_rate, random_state=random_state).reset_index(drop=True)
+    print(f"Sampled {len(sampled)}/{len(df)} records ({sample_rate * 100:.0f}%)")
+    return sampled
+
+
+def parse_xml_to_df(
+    xml_data: str,
+    sample_rate: float | None = None,
+    random_state: int | None = None,
+) -> pd.DataFrame:
     """Parse IBKR Flex statement XML into a pandas DataFrame.
 
     Prioritizes FIFOPerformanceSummaryUnderlying to prevent double counting.
@@ -108,5 +137,8 @@ def parse_xml_to_df(xml_data: str) -> pd.DataFrame:
         ])
     else:
         df["Theme"] = df["UnderlyingSymbol"].map(get_theme_for_symbol)
+
+    if sample_rate is not None:
+        df = sample_portfolio(df, sample_rate=sample_rate, random_state=random_state)
 
     return df
