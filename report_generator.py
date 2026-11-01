@@ -6,51 +6,74 @@ import pandas as pd
 
 
 def generate_html_report(
-    df: pd.DataFrame,
+    data: pd.DataFrame | dict[str, dict],
     output_path: str = "public/index.html",
-    period_str: str = ""
+    period_str: str = "",
+    default_slice: str = "ytd",
 ) -> None:
-    """Aggregate portfolio data and output the standalone interactive dashboard HTML."""
-    # Calculate ticker-level contributions
-    ticker_summary = df.groupby(['Theme', 'UnderlyingSymbol']).agg(
-        Description=('Description', 'first'),
-        TotalFifoPnl=('TotalFifoPnl', 'sum'),
-        RealizedPnl=('TotalRealizedPnl', 'sum'),
-        UnrealizedPnl=('TotalUnrealizedPnl', 'sum'),
-        Count=('Symbol', 'count')
-    ).reset_index()
+    """Aggregate portfolio data and output the standalone interactive dashboard HTML with multi-slice support."""
+    if isinstance(data, pd.DataFrame):
+        slices_input = {
+            "ytd": {
+                "label": "YTD",
+                "title": "Year-to-Date",
+                "period": period_str,
+                "df": data
+            }
+        }
+    else:
+        slices_input = data
 
-    ticker_summary['Description'] = ticker_summary['Description'].fillna(ticker_summary['UnderlyingSymbol'])
-    ticker_summary['TotalFifoPnl'] = ticker_summary['TotalFifoPnl'].round(2)
-    ticker_summary['RealizedPnl'] = ticker_summary['RealizedPnl'].round(2)
-    ticker_summary['UnrealizedPnl'] = ticker_summary['UnrealizedPnl'].round(2)
-    ticker_summary['IsActive'] = (ticker_summary['UnrealizedPnl'].abs() > 0.001).astype(bool)
+    if default_slice not in slices_input:
+        default_slice = next(iter(slices_input.keys())) if slices_input else "ytd"
 
-    # Theme aggregation
-    theme_summary = ticker_summary.groupby('Theme').agg(
-        TotalFifoPnl=('TotalFifoPnl', 'sum'),
-        RealizedPnl=('RealizedPnl', 'sum'),
-        UnrealizedPnl=('UnrealizedPnl', 'sum'),
-        AssetCount=('UnderlyingSymbol', 'nunique'),
-        WinningAssets=('TotalFifoPnl', lambda s: int((s > 0).sum())),
-        LosingAssets=('TotalFifoPnl', lambda s: int((s < 0).sum()))
-    ).reset_index().sort_values('TotalFifoPnl', ascending=False)
+    slices_payload = {}
+    for key, sinfo in slices_input.items():
+        df_slice = sinfo["df"]
+        ticker_summary = df_slice.groupby(['Theme', 'UnderlyingSymbol']).agg(
+            Description=('Description', 'first'),
+            TotalFifoPnl=('TotalFifoPnl', 'sum'),
+            RealizedPnl=('TotalRealizedPnl', 'sum'),
+            UnrealizedPnl=('TotalUnrealizedPnl', 'sum'),
+            Count=('Symbol', 'count')
+        ).reset_index()
 
-    theme_summary['TotalFifoPnl'] = theme_summary['TotalFifoPnl'].round(2)
-    theme_summary['RealizedPnl'] = theme_summary['RealizedPnl'].round(2)
-    theme_summary['UnrealizedPnl'] = theme_summary['UnrealizedPnl'].round(2)
+        ticker_summary['Description'] = ticker_summary['Description'].fillna(ticker_summary['UnderlyingSymbol'])
+        ticker_summary['TotalFifoPnl'] = ticker_summary['TotalFifoPnl'].round(2)
+        ticker_summary['RealizedPnl'] = ticker_summary['RealizedPnl'].round(2)
+        ticker_summary['UnrealizedPnl'] = ticker_summary['UnrealizedPnl'].round(2)
+        ticker_summary['IsActive'] = (ticker_summary['UnrealizedPnl'].abs() > 0.001).astype(bool)
 
-    total_assets = int(ticker_summary['UnderlyingSymbol'].nunique()) if not ticker_summary.empty else 0
-    active_assets_count = int(ticker_summary['IsActive'].sum()) if not ticker_summary.empty else 0
+        slices_payload[key] = {
+            "label": sinfo.get("label", key.upper()),
+            "title": sinfo.get("title", key.upper()),
+            "period": sinfo.get("period", ""),
+            "tickers": ticker_summary.to_dict(orient='records'),
+        }
 
-    theme_json = json.dumps(theme_summary.to_dict(orient='records'))
-    ticker_json = json.dumps(ticker_summary.to_dict(orient='records'))
+    # Initial metrics from default slice
+    default_tickers = slices_payload.get(default_slice, {}).get("tickers", [])
+    total_assets = len(set(t['UnderlyingSymbol'] for t in default_tickers))
+    active_assets_count = sum(1 for t in default_tickers if t.get('IsActive'))
+    initial_period = slices_payload.get(default_slice, {}).get("period", "") or period_str
+
+    slices_json = json.dumps(slices_payload)
+
+    # Slice switcher buttons HTML
+    slice_buttons_html = ""
+    for k, s in slices_payload.items():
+        active_cls = " active" if k == default_slice else ""
+        s_title = s.get("title", "")
+        s_label = s.get("label", "")
+        slice_buttons_html += f'<button class="slice-btn{active_cls}" data-slice="{k}" onclick="switchTimeSlice(\'{k}\')" title="{s_title}">{s_label}</button>\n'
+
+    slice_switcher_html = f'<div class="slice-switcher" role="tablist" id="time-slice-switcher">\n{slice_buttons_html}</div>' if len(slices_payload) > 1 else ""
+
+    period_badge_html = f'<div class="reporting-period" id="reporting-period-badge" style="{"display: inline-block;" if initial_period else "display: none;"}">{initial_period}</div>'
 
     out_dir = os.path.dirname(output_path)
     if out_dir:
         os.makedirs(out_dir, exist_ok=True)
-
-    period_badge_html = f'<div class="reporting-period">{period_str}</div>' if period_str else ""
 
     html = f"""<!DOCTYPE html>
 <html lang="en">
@@ -148,7 +171,7 @@ def generate_html_report(
         }}
 
         .container {{
-            max-width: 1600px;
+            max-width: 1280px;
             margin: 0 auto;
         }}
 
@@ -201,6 +224,44 @@ def generate_html_report(
             display: flex;
             align-items: center;
             gap: 8px;
+        }}
+
+        /* Time Slice Segmented Switcher */
+        .slice-switcher {{
+            display: inline-flex;
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 2px;
+            gap: 2px;
+        }}
+
+        .slice-btn {{
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4px 9px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            background: transparent;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            font-family: var(--font-main);
+        }}
+
+        .slice-btn:hover {{
+            color: var(--text-primary);
+            background: var(--ratio-track-bg);
+        }}
+
+        .slice-btn.active {{
+            background: var(--border-color);
+            color: var(--color-accent);
+            font-weight: 700;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
         }}
 
         /* Global Filter Toggle Switch */
@@ -539,6 +600,87 @@ def generate_html_report(
             flex-wrap: wrap;
         }}
 
+        /* Sort Controls */
+        .sort-control {{
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }}
+
+        .sort-label {{
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }}
+
+        .sort-btn-group {{
+            display: inline-flex;
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 2px;
+            gap: 2px;
+        }}
+
+        .sort-pill-btn {{
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            padding: 3px 8px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            background: transparent;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            font-family: var(--font-main);
+        }}
+
+        .sort-pill-btn:hover {{
+            color: var(--text-primary);
+            background: var(--ratio-track-bg);
+        }}
+
+        .sort-pill-btn.active {{
+            background: var(--border-color);
+            color: var(--color-accent);
+            font-weight: 700;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        }}
+
+        .sort-arrow {{
+            font-size: 9px;
+            line-height: 1;
+        }}
+
+        .sortable-th {{
+            cursor: pointer;
+            user-select: none;
+            transition: color 0.15s ease;
+        }}
+
+        .sortable-th:hover {{
+            color: var(--color-accent);
+        }}
+
+        .sort-indicator {{
+            display: inline-block;
+            margin-left: 4px;
+            font-size: 9px;
+            color: var(--text-muted);
+            opacity: 0.4;
+        }}
+
+        .sort-indicator.active {{
+            color: var(--color-accent);
+            opacity: 1;
+            font-weight: 700;
+        }}
+
         .performer-highlights {{
             display: flex;
             align-items: center;
@@ -616,6 +758,7 @@ def generate_html_report(
         table {{
             width: 100%;
             min-width: 100%;
+            table-layout: fixed;
             border-collapse: separate;
             border-spacing: 0;
             font-size: 12px;
@@ -664,39 +807,39 @@ def generate_html_report(
 
         /* Responsive Column Width Rules */
         .col-theme {{
-            width: auto;
-            min-width: 130px;
+            width: 32%;
+            min-width: 140px;
         }}
 
         .col-assets {{
-            width: 80px;
+            width: 12%;
             min-width: 65px;
             text-align: center;
         }}
 
         .col-ticker {{
-            width: 95px;
+            width: 14%;
             min-width: 85px;
         }}
 
         .col-desc {{
-            width: auto;
+            width: 32%;
             min-width: 120px;
         }}
 
         .col-theme-tag {{
-            width: 120px;
+            width: 14%;
             min-width: 95px;
         }}
 
         .col-realized, .col-unrealized {{
-            width: 110px;
-            min-width: 85px;
+            width: 18%;
+            min-width: 95px;
         }}
 
         .col-pnl {{
-            width: 155px;
-            min-width: 125px;
+            width: 20%;
+            min-width: 130px;
         }}
 
         .theme-name-cell {{
@@ -757,7 +900,7 @@ def generate_html_report(
         }}
 
         .ratio-bar-track {{
-            width: 58px;
+            width: 72px;
             height: 4px;
             background: var(--ratio-track-bg);
             border-radius: 2px;
@@ -1093,6 +1236,9 @@ def generate_html_report(
 
             <div class="header-right">
                 <div class="header-controls">
+                    <!-- Time Slice Segmented Switcher -->
+                    {slice_switcher_html}
+
                     <!-- Global Filter Toggle Switch -->
                     <label class="filter-toggle" title="Filter dashboard to show only currently open / active positions">
                         <input type="checkbox" id="active-filter-checkbox" onchange="toggleActiveFilter(this.checked)">
@@ -1168,6 +1314,22 @@ def generate_html_report(
                 </div>
 
                 <div class="toolbar-right">
+                    <!-- Global Sort Control (operates across Table and Graph views) -->
+                    <div class="sort-control" title="Sort themes and tickers by metric">
+                        <span class="sort-label">Sort:</span>
+                        <div class="sort-btn-group" role="tablist">
+                            <button id="sort-btn-pnl" class="sort-pill-btn active" onclick="setSort('pnl')" title="Sort by Net FIFO PnL">
+                                Net PnL <span id="sort-icon-pnl" class="sort-arrow">▼</span>
+                            </button>
+                            <button id="sort-btn-realized" class="sort-pill-btn" onclick="setSort('realized')" title="Sort by Realized PnL">
+                                Realized <span id="sort-icon-realized" class="sort-arrow"></span>
+                            </button>
+                            <button id="sort-btn-unrealized" class="sort-pill-btn" onclick="setSort('unrealized')" title="Sort by Unrealized PnL">
+                                Unrealized <span id="sort-icon-unrealized" class="sort-arrow"></span>
+                            </button>
+                        </div>
+                    </div>
+
                     <div class="performer-highlights" id="performer-highlights">
                         <!-- Populated dynamically: Best / Worst -->
                     </div>
@@ -1209,8 +1371,35 @@ def generate_html_report(
     </div>
 
     <script>
-        // Data passed from Python
-        const TICKER_DATA = {ticker_json};
+        // Multi-slice data passed from Python
+        const TIME_SLICES = {slices_json};
+        let activeTimeSlice = '{default_slice}';
+
+        // Dynamic ticker dataset pointer for current time slice
+        let TICKER_DATA = TIME_SLICES[activeTimeSlice] ? TIME_SLICES[activeTimeSlice].tickers : [];
+
+        function switchTimeSlice(sliceKey) {{
+            if (!TIME_SLICES[sliceKey]) return;
+            activeTimeSlice = sliceKey;
+
+            // Update segmented button UI
+            document.querySelectorAll('.slice-btn').forEach(btn => {{
+                btn.classList.toggle('active', btn.getAttribute('data-slice') === sliceKey);
+            }});
+
+            // Switch active dataset
+            TICKER_DATA = TIME_SLICES[sliceKey].tickers;
+
+            // Update reporting period badge
+            const badge = document.getElementById('reporting-period-badge');
+            if (badge) {{
+                const p = TIME_SLICES[sliceKey].period;
+                badge.innerText = p ? p : '';
+                badge.style.display = p ? 'inline-block' : 'none';
+            }}
+
+            refreshDataAndViews();
+        }}
 
         // Application State
         let currentMode = 'table';         // 'table' | 'graph'
@@ -1218,6 +1407,55 @@ def generate_html_report(
         let tickerSearchQuery = '';        // Active search filter for tickers
         let showActiveOnly = false;        // Toggle active/open positions only
         let currentThemeList = [];         // Aggregated themes list
+        let sortColumn = 'pnl';            // 'pnl' | 'realized' | 'unrealized'
+        let sortDirection = 'desc';        // 'desc' | 'asc'
+
+        function setSort(col) {{
+            if (sortColumn === col) {{
+                sortDirection = sortDirection === 'desc' ? 'asc' : 'desc';
+            }} else {{
+                sortColumn = col;
+                sortDirection = 'desc';
+            }}
+            updateSortControls();
+            refreshDataAndViews();
+        }}
+
+        function updateSortControls() {{
+            ['pnl', 'realized', 'unrealized'].forEach(col => {{
+                const btn = document.getElementById(`sort-btn-${{col}}`);
+                const icon = document.getElementById(`sort-icon-${{col}}`);
+                const isActive = sortColumn === col;
+                if (btn) btn.classList.toggle('active', isActive);
+                if (icon) icon.textContent = isActive ? (sortDirection === 'asc' ? '▲' : '▼') : '';
+            }});
+        }}
+
+        function getSortIndicator(col) {{
+            if (sortColumn === col) {{
+                return `<span class="sort-indicator active">${{sortDirection === 'asc' ? '▲' : '▼'}}</span>`;
+            }}
+            return `<span class="sort-indicator">↕</span>`;
+        }}
+
+        function sortItems(items) {{
+            const mult = sortDirection === 'asc' ? 1 : -1;
+            return [...items].sort((a, b) => {{
+                let valA = 0;
+                let valB = 0;
+                if (sortColumn === 'realized') {{
+                    valA = a.RealizedPnl || 0;
+                    valB = b.RealizedPnl || 0;
+                }} else if (sortColumn === 'unrealized') {{
+                    valA = a.UnrealizedPnl || 0;
+                    valB = b.UnrealizedPnl || 0;
+                }} else {{
+                    valA = a.TotalFifoPnl || 0;
+                    valB = b.TotalFifoPnl || 0;
+                }}
+                return (valA - valB) * mult;
+            }});
+        }}
 
         function escapeHtml(s) {{
             return String(s == null ? '' : s).replace(/[&<>"']/g, c => (
@@ -1326,8 +1564,7 @@ def generate_html_report(
                 UnrealizedPnl: Math.round(item.UnrealizedPnl * 100) / 100
             }}));
 
-            result.sort((a, b) => b.TotalFifoPnl - a.TotalFifoPnl);
-            return result;
+            return sortItems(result);
         }}
 
         function updateKpis(tickers) {{
@@ -1478,11 +1715,11 @@ def generate_html_report(
                 titleEl.innerHTML = `<span>Ticker Search: "${{escapeHtml(tickerSearchQuery)}}"</span>`;
                 clickHint.style.display = 'none';
 
-                const matchedTickers = availableTickers.filter(t => 
+                let matchedTickers = availableTickers.filter(t => 
                     t.UnderlyingSymbol.toLowerCase().includes(searchQ) ||
                     (t.Description && t.Description.toLowerCase().includes(searchQ))
                 );
-                matchedTickers.sort((a, b) => b.TotalFifoPnl - a.TotalFifoPnl);
+                matchedTickers = sortItems(matchedTickers);
 
                 const totalMatchedPnl = Math.round(matchedTickers.reduce((acc, t) => acc + t.TotalFifoPnl, 0) * 100) / 100;
                 pnlPill.style.display = 'inline-flex';
@@ -1514,7 +1751,7 @@ def generate_html_report(
                     );
                 }}
 
-                tickers.sort((a, b) => b.TotalFifoPnl - a.TotalFifoPnl);
+                tickers = sortItems(tickers);
                 const totalPnl = Math.round(tickers.reduce((acc, t) => acc + t.TotalFifoPnl, 0) * 100) / 100;
 
                 pnlPill.style.display = 'inline-flex';
@@ -1546,7 +1783,7 @@ def generate_html_report(
                     );
                 }}
 
-                tickers.sort((a, b) => b.TotalFifoPnl - a.TotalFifoPnl);
+                tickers = sortItems(tickers);
                 const themePnl = Math.round(tickers.reduce((acc, t) => acc + t.TotalFifoPnl, 0) * 100) / 100;
 
                 pnlPill.style.display = 'inline-flex';
@@ -1590,9 +1827,9 @@ def generate_html_report(
                 <tr>
                     <th class="col-theme">Theme</th>
                     <th class="col-assets" style="text-align:center;">Assets</th>
-                    <th class="num col-hide-mobile col-realized">Realized</th>
-                    <th class="num col-hide-mobile col-unrealized">Unrealized</th>
-                    <th class="num col-pnl">Net PnL</th>
+                    <th class="num col-hide-mobile col-realized sortable-th" onclick="setSort('realized')" title="Sort by Realized PnL">Realized ${{getSortIndicator('realized')}}</th>
+                    <th class="num col-hide-mobile col-unrealized sortable-th" onclick="setSort('unrealized')" title="Sort by Unrealized PnL">Unrealized ${{getSortIndicator('unrealized')}}</th>
+                    <th class="num col-pnl sortable-th" onclick="setSort('pnl')" title="Sort by Net FIFO PnL">Net PnL ${{getSortIndicator('pnl')}}</th>
                 </tr>
             `;
 
@@ -1663,9 +1900,9 @@ def generate_html_report(
                     <th class="col-ticker">Ticker</th>
                     <th class="col-desc">Description</th>
                     ${{showThemeColumn ? '<th class="col-theme-tag">Theme</th>' : ''}}
-                    <th class="num col-hide-mobile col-realized">Realized</th>
-                    <th class="num col-hide-mobile col-unrealized">Unrealized</th>
-                    <th class="num col-pnl">Net PnL</th>
+                    <th class="num col-hide-mobile col-realized sortable-th" onclick="setSort('realized')" title="Sort by Realized PnL">Realized ${{getSortIndicator('realized')}}</th>
+                    <th class="num col-hide-mobile col-unrealized sortable-th" onclick="setSort('unrealized')" title="Sort by Unrealized PnL">Unrealized ${{getSortIndicator('unrealized')}}</th>
+                    <th class="num col-pnl sortable-th" onclick="setSort('pnl')" title="Sort by Net FIFO PnL">Net PnL ${{getSortIndicator('pnl')}}</th>
                 </tr>
             `;
 
@@ -1989,6 +2226,11 @@ def generate_html_report(
             const availableTickers = getFilteredTickers();
             currentThemeList = aggregateThemes(availableTickers);
             updateKpis(availableTickers);
+
+            const activeCountTag = document.getElementById('active-count-tag');
+            if (activeCountTag) {{
+                activeCountTag.innerText = TICKER_DATA.filter(t => t.IsActive).length;
+            }}
 
             // If selected theme no longer exists under current filter, reset to overview
             if (drilldownTheme && drilldownTheme !== '__TOTAL__') {{
