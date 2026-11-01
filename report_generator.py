@@ -171,7 +171,7 @@ def generate_html_report(
         }}
 
         .container {{
-            max-width: 1600px;
+            max-width: 1280px;
             margin: 0 auto;
         }}
 
@@ -758,6 +758,7 @@ def generate_html_report(
         table {{
             width: 100%;
             min-width: 100%;
+            table-layout: fixed;
             border-collapse: separate;
             border-spacing: 0;
             font-size: 12px;
@@ -806,39 +807,39 @@ def generate_html_report(
 
         /* Responsive Column Width Rules */
         .col-theme {{
-            width: auto;
-            min-width: 130px;
+            width: 32%;
+            min-width: 140px;
         }}
 
         .col-assets {{
-            width: 80px;
+            width: 12%;
             min-width: 65px;
             text-align: center;
         }}
 
         .col-ticker {{
-            width: 95px;
+            width: 14%;
             min-width: 85px;
         }}
 
         .col-desc {{
-            width: auto;
+            width: 32%;
             min-width: 120px;
         }}
 
         .col-theme-tag {{
-            width: 120px;
+            width: 14%;
             min-width: 95px;
         }}
 
         .col-realized, .col-unrealized {{
-            width: 110px;
-            min-width: 85px;
+            width: 18%;
+            min-width: 95px;
         }}
 
         .col-pnl {{
-            width: 155px;
-            min-width: 125px;
+            width: 20%;
+            min-width: 130px;
         }}
 
         .theme-name-cell {{
@@ -899,7 +900,7 @@ def generate_html_report(
         }}
 
         .ratio-bar-track {{
-            width: 58px;
+            width: 72px;
             height: 4px;
             background: var(--ratio-track-bg);
             border-radius: 2px;
