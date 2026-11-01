@@ -6,51 +6,74 @@ import pandas as pd
 
 
 def generate_html_report(
-    df: pd.DataFrame,
+    data: pd.DataFrame | dict[str, dict],
     output_path: str = "public/index.html",
-    period_str: str = ""
+    period_str: str = "",
+    default_slice: str = "ytd",
 ) -> None:
-    """Aggregate portfolio data and output the standalone interactive dashboard HTML."""
-    # Calculate ticker-level contributions
-    ticker_summary = df.groupby(['Theme', 'UnderlyingSymbol']).agg(
-        Description=('Description', 'first'),
-        TotalFifoPnl=('TotalFifoPnl', 'sum'),
-        RealizedPnl=('TotalRealizedPnl', 'sum'),
-        UnrealizedPnl=('TotalUnrealizedPnl', 'sum'),
-        Count=('Symbol', 'count')
-    ).reset_index()
+    """Aggregate portfolio data and output the standalone interactive dashboard HTML with multi-slice support."""
+    if isinstance(data, pd.DataFrame):
+        slices_input = {
+            "ytd": {
+                "label": "YTD",
+                "title": "Year-to-Date",
+                "period": period_str,
+                "df": data
+            }
+        }
+    else:
+        slices_input = data
 
-    ticker_summary['Description'] = ticker_summary['Description'].fillna(ticker_summary['UnderlyingSymbol'])
-    ticker_summary['TotalFifoPnl'] = ticker_summary['TotalFifoPnl'].round(2)
-    ticker_summary['RealizedPnl'] = ticker_summary['RealizedPnl'].round(2)
-    ticker_summary['UnrealizedPnl'] = ticker_summary['UnrealizedPnl'].round(2)
-    ticker_summary['IsActive'] = (ticker_summary['UnrealizedPnl'].abs() > 0.001).astype(bool)
+    if default_slice not in slices_input:
+        default_slice = next(iter(slices_input.keys())) if slices_input else "ytd"
 
-    # Theme aggregation
-    theme_summary = ticker_summary.groupby('Theme').agg(
-        TotalFifoPnl=('TotalFifoPnl', 'sum'),
-        RealizedPnl=('RealizedPnl', 'sum'),
-        UnrealizedPnl=('UnrealizedPnl', 'sum'),
-        AssetCount=('UnderlyingSymbol', 'nunique'),
-        WinningAssets=('TotalFifoPnl', lambda s: int((s > 0).sum())),
-        LosingAssets=('TotalFifoPnl', lambda s: int((s < 0).sum()))
-    ).reset_index().sort_values('TotalFifoPnl', ascending=False)
+    slices_payload = {}
+    for key, sinfo in slices_input.items():
+        df_slice = sinfo["df"]
+        ticker_summary = df_slice.groupby(['Theme', 'UnderlyingSymbol']).agg(
+            Description=('Description', 'first'),
+            TotalFifoPnl=('TotalFifoPnl', 'sum'),
+            RealizedPnl=('TotalRealizedPnl', 'sum'),
+            UnrealizedPnl=('TotalUnrealizedPnl', 'sum'),
+            Count=('Symbol', 'count')
+        ).reset_index()
 
-    theme_summary['TotalFifoPnl'] = theme_summary['TotalFifoPnl'].round(2)
-    theme_summary['RealizedPnl'] = theme_summary['RealizedPnl'].round(2)
-    theme_summary['UnrealizedPnl'] = theme_summary['UnrealizedPnl'].round(2)
+        ticker_summary['Description'] = ticker_summary['Description'].fillna(ticker_summary['UnderlyingSymbol'])
+        ticker_summary['TotalFifoPnl'] = ticker_summary['TotalFifoPnl'].round(2)
+        ticker_summary['RealizedPnl'] = ticker_summary['RealizedPnl'].round(2)
+        ticker_summary['UnrealizedPnl'] = ticker_summary['UnrealizedPnl'].round(2)
+        ticker_summary['IsActive'] = (ticker_summary['UnrealizedPnl'].abs() > 0.001).astype(bool)
 
-    total_assets = int(ticker_summary['UnderlyingSymbol'].nunique()) if not ticker_summary.empty else 0
-    active_assets_count = int(ticker_summary['IsActive'].sum()) if not ticker_summary.empty else 0
+        slices_payload[key] = {
+            "label": sinfo.get("label", key.upper()),
+            "title": sinfo.get("title", key.upper()),
+            "period": sinfo.get("period", ""),
+            "tickers": ticker_summary.to_dict(orient='records'),
+        }
 
-    theme_json = json.dumps(theme_summary.to_dict(orient='records'))
-    ticker_json = json.dumps(ticker_summary.to_dict(orient='records'))
+    # Initial metrics from default slice
+    default_tickers = slices_payload.get(default_slice, {}).get("tickers", [])
+    total_assets = len(set(t['UnderlyingSymbol'] for t in default_tickers))
+    active_assets_count = sum(1 for t in default_tickers if t.get('IsActive'))
+    initial_period = slices_payload.get(default_slice, {}).get("period", "") or period_str
+
+    slices_json = json.dumps(slices_payload)
+
+    # Slice switcher buttons HTML
+    slice_buttons_html = ""
+    for k, s in slices_payload.items():
+        active_cls = " active" if k == default_slice else ""
+        s_title = s.get("title", "")
+        s_label = s.get("label", "")
+        slice_buttons_html += f'<button class="slice-btn{active_cls}" data-slice="{k}" onclick="switchTimeSlice(\'{k}\')" title="{s_title}">{s_label}</button>\n'
+
+    slice_switcher_html = f'<div class="slice-switcher" role="tablist" id="time-slice-switcher">\n{slice_buttons_html}</div>' if len(slices_payload) > 1 else ""
+
+    period_badge_html = f'<div class="reporting-period" id="reporting-period-badge" style="{"display: inline-block;" if initial_period else "display: none;"}">{initial_period}</div>'
 
     out_dir = os.path.dirname(output_path)
     if out_dir:
         os.makedirs(out_dir, exist_ok=True)
-
-    period_badge_html = f'<div class="reporting-period">{period_str}</div>' if period_str else ""
 
     html = f"""<!DOCTYPE html>
 <html lang="en">
@@ -201,6 +224,44 @@ def generate_html_report(
             display: flex;
             align-items: center;
             gap: 8px;
+        }}
+
+        /* Time Slice Segmented Switcher */
+        .slice-switcher {{
+            display: inline-flex;
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 2px;
+            gap: 2px;
+        }}
+
+        .slice-btn {{
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4px 9px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            background: transparent;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            font-family: var(--font-main);
+        }}
+
+        .slice-btn:hover {{
+            color: var(--text-primary);
+            background: var(--ratio-track-bg);
+        }}
+
+        .slice-btn.active {{
+            background: var(--border-color);
+            color: var(--color-accent);
+            font-weight: 700;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
         }}
 
         /* Global Filter Toggle Switch */
@@ -1093,6 +1154,9 @@ def generate_html_report(
 
             <div class="header-right">
                 <div class="header-controls">
+                    <!-- Time Slice Segmented Switcher -->
+                    {slice_switcher_html}
+
                     <!-- Global Filter Toggle Switch -->
                     <label class="filter-toggle" title="Filter dashboard to show only currently open / active positions">
                         <input type="checkbox" id="active-filter-checkbox" onchange="toggleActiveFilter(this.checked)">
@@ -1209,8 +1273,35 @@ def generate_html_report(
     </div>
 
     <script>
-        // Data passed from Python
-        const TICKER_DATA = {ticker_json};
+        // Multi-slice data passed from Python
+        const TIME_SLICES = {slices_json};
+        let activeTimeSlice = '{default_slice}';
+
+        // Dynamic ticker dataset pointer for current time slice
+        let TICKER_DATA = TIME_SLICES[activeTimeSlice] ? TIME_SLICES[activeTimeSlice].tickers : [];
+
+        function switchTimeSlice(sliceKey) {{
+            if (!TIME_SLICES[sliceKey]) return;
+            activeTimeSlice = sliceKey;
+
+            // Update segmented button UI
+            document.querySelectorAll('.slice-btn').forEach(btn => {{
+                btn.classList.toggle('active', btn.getAttribute('data-slice') === sliceKey);
+            }});
+
+            // Switch active dataset
+            TICKER_DATA = TIME_SLICES[sliceKey].tickers;
+
+            // Update reporting period badge
+            const badge = document.getElementById('reporting-period-badge');
+            if (badge) {{
+                const p = TIME_SLICES[sliceKey].period;
+                badge.innerText = p ? p : '';
+                badge.style.display = p ? 'inline-block' : 'none';
+            }}
+
+            refreshDataAndViews();
+        }}
 
         // Application State
         let currentMode = 'table';         // 'table' | 'graph'
@@ -1989,6 +2080,11 @@ def generate_html_report(
             const availableTickers = getFilteredTickers();
             currentThemeList = aggregateThemes(availableTickers);
             updateKpis(availableTickers);
+
+            const activeCountTag = document.getElementById('active-count-tag');
+            if (activeCountTag) {{
+                activeCountTag.innerText = TICKER_DATA.filter(t => t.IsActive).length;
+            }}
 
             // If selected theme no longer exists under current filter, reset to overview
             if (drilldownTheme && drilldownTheme !== '__TOTAL__') {{
