@@ -600,6 +600,87 @@ def generate_html_report(
             flex-wrap: wrap;
         }}
 
+        /* Sort Controls */
+        .sort-control {{
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }}
+
+        .sort-label {{
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }}
+
+        .sort-btn-group {{
+            display: inline-flex;
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 2px;
+            gap: 2px;
+        }}
+
+        .sort-pill-btn {{
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            padding: 3px 8px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            background: transparent;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            font-family: var(--font-main);
+        }}
+
+        .sort-pill-btn:hover {{
+            color: var(--text-primary);
+            background: var(--ratio-track-bg);
+        }}
+
+        .sort-pill-btn.active {{
+            background: var(--border-color);
+            color: var(--color-accent);
+            font-weight: 700;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        }}
+
+        .sort-arrow {{
+            font-size: 9px;
+            line-height: 1;
+        }}
+
+        .sortable-th {{
+            cursor: pointer;
+            user-select: none;
+            transition: color 0.15s ease;
+        }}
+
+        .sortable-th:hover {{
+            color: var(--color-accent);
+        }}
+
+        .sort-indicator {{
+            display: inline-block;
+            margin-left: 4px;
+            font-size: 9px;
+            color: var(--text-muted);
+            opacity: 0.4;
+        }}
+
+        .sort-indicator.active {{
+            color: var(--color-accent);
+            opacity: 1;
+            font-weight: 700;
+        }}
+
         .performer-highlights {{
             display: flex;
             align-items: center;
@@ -1232,6 +1313,22 @@ def generate_html_report(
                 </div>
 
                 <div class="toolbar-right">
+                    <!-- Global Sort Control (operates across Table and Graph views) -->
+                    <div class="sort-control" title="Sort themes and tickers by metric">
+                        <span class="sort-label">Sort:</span>
+                        <div class="sort-btn-group" role="tablist">
+                            <button id="sort-btn-pnl" class="sort-pill-btn active" onclick="setSort('pnl')" title="Sort by Net FIFO PnL">
+                                Net PnL <span id="sort-icon-pnl" class="sort-arrow">▼</span>
+                            </button>
+                            <button id="sort-btn-realized" class="sort-pill-btn" onclick="setSort('realized')" title="Sort by Realized PnL">
+                                Realized <span id="sort-icon-realized" class="sort-arrow"></span>
+                            </button>
+                            <button id="sort-btn-unrealized" class="sort-pill-btn" onclick="setSort('unrealized')" title="Sort by Unrealized PnL">
+                                Unrealized <span id="sort-icon-unrealized" class="sort-arrow"></span>
+                            </button>
+                        </div>
+                    </div>
+
                     <div class="performer-highlights" id="performer-highlights">
                         <!-- Populated dynamically: Best / Worst -->
                     </div>
@@ -1309,6 +1406,55 @@ def generate_html_report(
         let tickerSearchQuery = '';        // Active search filter for tickers
         let showActiveOnly = false;        // Toggle active/open positions only
         let currentThemeList = [];         // Aggregated themes list
+        let sortColumn = 'pnl';            // 'pnl' | 'realized' | 'unrealized'
+        let sortDirection = 'desc';        // 'desc' | 'asc'
+
+        function setSort(col) {{
+            if (sortColumn === col) {{
+                sortDirection = sortDirection === 'desc' ? 'asc' : 'desc';
+            }} else {{
+                sortColumn = col;
+                sortDirection = 'desc';
+            }}
+            updateSortControls();
+            refreshDataAndViews();
+        }}
+
+        function updateSortControls() {{
+            ['pnl', 'realized', 'unrealized'].forEach(col => {{
+                const btn = document.getElementById(`sort-btn-${{col}}`);
+                const icon = document.getElementById(`sort-icon-${{col}}`);
+                const isActive = sortColumn === col;
+                if (btn) btn.classList.toggle('active', isActive);
+                if (icon) icon.textContent = isActive ? (sortDirection === 'asc' ? '▲' : '▼') : '';
+            }});
+        }}
+
+        function getSortIndicator(col) {{
+            if (sortColumn === col) {{
+                return `<span class="sort-indicator active">${{sortDirection === 'asc' ? '▲' : '▼'}}</span>`;
+            }}
+            return `<span class="sort-indicator">↕</span>`;
+        }}
+
+        function sortItems(items) {{
+            const mult = sortDirection === 'asc' ? 1 : -1;
+            return [...items].sort((a, b) => {{
+                let valA = 0;
+                let valB = 0;
+                if (sortColumn === 'realized') {{
+                    valA = a.RealizedPnl || 0;
+                    valB = b.RealizedPnl || 0;
+                }} else if (sortColumn === 'unrealized') {{
+                    valA = a.UnrealizedPnl || 0;
+                    valB = b.UnrealizedPnl || 0;
+                }} else {{
+                    valA = a.TotalFifoPnl || 0;
+                    valB = b.TotalFifoPnl || 0;
+                }}
+                return (valA - valB) * mult;
+            }});
+        }}
 
         function escapeHtml(s) {{
             return String(s == null ? '' : s).replace(/[&<>"']/g, c => (
@@ -1417,8 +1563,7 @@ def generate_html_report(
                 UnrealizedPnl: Math.round(item.UnrealizedPnl * 100) / 100
             }}));
 
-            result.sort((a, b) => b.TotalFifoPnl - a.TotalFifoPnl);
-            return result;
+            return sortItems(result);
         }}
 
         function updateKpis(tickers) {{
@@ -1569,11 +1714,11 @@ def generate_html_report(
                 titleEl.innerHTML = `<span>Ticker Search: "${{escapeHtml(tickerSearchQuery)}}"</span>`;
                 clickHint.style.display = 'none';
 
-                const matchedTickers = availableTickers.filter(t => 
+                let matchedTickers = availableTickers.filter(t => 
                     t.UnderlyingSymbol.toLowerCase().includes(searchQ) ||
                     (t.Description && t.Description.toLowerCase().includes(searchQ))
                 );
-                matchedTickers.sort((a, b) => b.TotalFifoPnl - a.TotalFifoPnl);
+                matchedTickers = sortItems(matchedTickers);
 
                 const totalMatchedPnl = Math.round(matchedTickers.reduce((acc, t) => acc + t.TotalFifoPnl, 0) * 100) / 100;
                 pnlPill.style.display = 'inline-flex';
@@ -1605,7 +1750,7 @@ def generate_html_report(
                     );
                 }}
 
-                tickers.sort((a, b) => b.TotalFifoPnl - a.TotalFifoPnl);
+                tickers = sortItems(tickers);
                 const totalPnl = Math.round(tickers.reduce((acc, t) => acc + t.TotalFifoPnl, 0) * 100) / 100;
 
                 pnlPill.style.display = 'inline-flex';
@@ -1637,7 +1782,7 @@ def generate_html_report(
                     );
                 }}
 
-                tickers.sort((a, b) => b.TotalFifoPnl - a.TotalFifoPnl);
+                tickers = sortItems(tickers);
                 const themePnl = Math.round(tickers.reduce((acc, t) => acc + t.TotalFifoPnl, 0) * 100) / 100;
 
                 pnlPill.style.display = 'inline-flex';
@@ -1681,9 +1826,9 @@ def generate_html_report(
                 <tr>
                     <th class="col-theme">Theme</th>
                     <th class="col-assets" style="text-align:center;">Assets</th>
-                    <th class="num col-hide-mobile col-realized">Realized</th>
-                    <th class="num col-hide-mobile col-unrealized">Unrealized</th>
-                    <th class="num col-pnl">Net PnL</th>
+                    <th class="num col-hide-mobile col-realized sortable-th" onclick="setSort('realized')" title="Sort by Realized PnL">Realized ${{getSortIndicator('realized')}}</th>
+                    <th class="num col-hide-mobile col-unrealized sortable-th" onclick="setSort('unrealized')" title="Sort by Unrealized PnL">Unrealized ${{getSortIndicator('unrealized')}}</th>
+                    <th class="num col-pnl sortable-th" onclick="setSort('pnl')" title="Sort by Net FIFO PnL">Net PnL ${{getSortIndicator('pnl')}}</th>
                 </tr>
             `;
 
@@ -1754,9 +1899,9 @@ def generate_html_report(
                     <th class="col-ticker">Ticker</th>
                     <th class="col-desc">Description</th>
                     ${{showThemeColumn ? '<th class="col-theme-tag">Theme</th>' : ''}}
-                    <th class="num col-hide-mobile col-realized">Realized</th>
-                    <th class="num col-hide-mobile col-unrealized">Unrealized</th>
-                    <th class="num col-pnl">Net PnL</th>
+                    <th class="num col-hide-mobile col-realized sortable-th" onclick="setSort('realized')" title="Sort by Realized PnL">Realized ${{getSortIndicator('realized')}}</th>
+                    <th class="num col-hide-mobile col-unrealized sortable-th" onclick="setSort('unrealized')" title="Sort by Unrealized PnL">Unrealized ${{getSortIndicator('unrealized')}}</th>
+                    <th class="num col-pnl sortable-th" onclick="setSort('pnl')" title="Sort by Net FIFO PnL">Net PnL ${{getSortIndicator('pnl')}}</th>
                 </tr>
             `;
 
