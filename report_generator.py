@@ -358,15 +358,17 @@ def generate_html_report(
         @media (max-width: 960px) {{
             .header {{
                 display: grid;
-                grid-template-columns: 1fr auto;
+                grid-template-columns: minmax(0, 1fr) auto;
                 grid-template-areas:
                     "brand controls"
                     "kpi kpi";
                 gap: 8px 10px;
                 align-items: center;
+                min-width: 0;
             }}
             .brand-container {{
                 grid-area: brand;
+                min-width: 0;
             }}
             .header-right {{
                 display: contents;
@@ -374,13 +376,60 @@ def generate_html_report(
             .header-controls {{
                 grid-area: controls;
                 justify-self: end;
+                min-width: 0;
             }}
             .kpi-strip {{
                 grid-area: kpi;
                 width: 100%;
+                min-width: 0;
                 grid-template-columns: repeat(4, 1fr);
                 gap: 8px 12px;
                 padding: 8px 14px;
+            }}
+        }}
+
+        /* Phone layout: keep controls inside the viewport while preserving the desktop/tablet layout above. */
+        @media (max-width: 640px) {{
+            html, body {{
+                max-width: 100%;
+                overflow-x: hidden;
+            }}
+            .container, .card {{
+                width: 100%;
+                min-width: 0;
+            }}
+            .header {{
+                grid-template-columns: minmax(0, 1fr);
+                grid-template-areas:
+                    "brand"
+                    "controls"
+                    "kpi";
+                align-items: stretch;
+            }}
+            .header-controls {{
+                width: 100%;
+                justify-self: stretch;
+                flex-wrap: wrap;
+                row-gap: 6px;
+            }}
+            .slice-switcher {{
+                flex: 0 0 auto;
+                width: max-content;
+            }}
+            .slice-btn {{
+                flex: 0 0 auto;
+            }}
+            .filter-toggle, .header-btn {{
+                flex: 0 0 auto;
+            }}
+            .reporting-period {{
+                max-width: 100%;
+                overflow-wrap: anywhere;
+            }}
+            .ticker-search-box {{
+                flex: 1 1 100%;
+                width: 100%;
+                max-width: none;
             }}
         }}
 
@@ -1244,7 +1293,7 @@ def generate_html_report(
                         <input type="checkbox" id="active-filter-checkbox" onchange="toggleActiveFilter(this.checked)">
                         <span class="filter-toggle-pill">
                             <span class="filter-dot"></span>
-                            <span>Active Only</span>
+                            <span>Active</span>
                             <span class="active-count-tag" id="active-count-tag">{active_assets_count}</span>
                         </span>
                     </label>
