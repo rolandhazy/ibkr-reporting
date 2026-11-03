@@ -238,7 +238,7 @@ def get_time_slice_reports(
             period_days = 30
         elif slice_key == "ytd":
             from_date = f"{now.year}0101"
-            to_date = now.strftime("%Y%m%d")
+            to_date = get_last_business_day(now)
 
         print(f"\n--- Resolving Slice [{cfg['label']}] {cfg['title']} ---")
         try:
