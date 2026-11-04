@@ -57,7 +57,9 @@ def generate_html_report(
     active_assets_count = sum(1 for t in default_tickers if t.get('IsActive'))
     initial_period = slices_payload.get(default_slice, {}).get("period", "") or period_str
 
-    slices_json = json.dumps(slices_payload)
+    # Escape '</' so no embedded description can terminate the script block early;
+    # the inserted backslash is a valid escape sequence in both JSON and JS strings.
+    slices_json = json.dumps(slices_payload).replace("</", "<\\/")
 
     # Slice switcher buttons HTML
     slice_buttons_html = ""

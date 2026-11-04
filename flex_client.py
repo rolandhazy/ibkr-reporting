@@ -251,12 +251,11 @@ def get_time_slice_reports(
             )
             results[slice_key] = xml_data
         except Exception as e:
-            print(f"Error fetching slice '{slice_key}': {e}")
-            # If ytd cache exists as ultimate fallback, check for flex_report_cache.xml
-            if slice_key != "ytd" and os.path.exists("flex_report_cache.xml"):
-                print(f"Notice: Using default flex_report_cache.xml as temporary fallback for '{slice_key}'.")
-                with open("flex_report_cache.xml", "r", encoding="utf-8") as f:
-                    results[slice_key] = f.read()
+            # Omit the failed slice instead of substituting data from another period
+            # (previously: the YTD cache was served under a failed slice's label, e.g. "1D").
+            # main.py only renders slices that resolved successfully, so the dashboard
+            # simply shows no tab for a missing slice.
+            print(f"Error fetching slice '{slice_key}': {e}. Omitting this slice from the report.")
 
         # Add brief pause between sequential IBKR requests to avoid rate limits
         if idx < len(slices_to_fetch) - 1:
