@@ -213,9 +213,3 @@ Configured in [`.github/workflows/deploy-pages-dev.yml`](.github/workflows/deplo
 
 - **Do NOT commit `.env` or statement XML files**: Keep API credentials and downloaded financial reports private. Both `.env` and `*.xml` are included in `.gitignore`.
 - **Dev Sampling**: When previewing or testing publicly, utilize `--sample-rate` to avoid exposing the full composition and scale of your portfolio.
-
----
-
-## License
-
-This project is licensed under the [MIT License](LICENSE).
