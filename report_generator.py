@@ -1323,7 +1323,7 @@ def generate_html_report(
 
                 <!-- KPI Strip -->
                 <div class="kpi-strip">
-                    <div class="kpi-item kpi-hero">
+                    <div class="kpi-item">
                         <span class="kpi-label">Net FIFO PnL</span>
                         <span class="kpi-val" id="kpi-net-pnl">—</span>
                     </div>
