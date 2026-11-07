@@ -133,10 +133,10 @@ def generate_html_report(
             --color-positive-bg: rgba(5, 150, 105, 0.12);
             --color-negative: #e11d48;
             --color-negative-bg: rgba(225, 29, 72, 0.12);
-            --color-realized-pos: #16a34a;
-            --color-realized-neg: #dc2626;
-            --color-unrealized-pos: #16a34a;
-            --color-unrealized-neg: #dc2626;
+            --color-realized-pos: #15803d;
+            --color-realized-neg: #b91c1c;
+            --color-unrealized-pos: #0f766e;
+            --color-unrealized-neg: #c2410c;
             --color-accent: #0284c7;
             --color-accent-bg: rgba(2, 132, 199, 0.12);
             --input-bg: #ffffff;
@@ -1124,11 +1124,11 @@ def generate_html_report(
         }}
 
         .legend-swatch.realized-swatch {{
-            background: linear-gradient(90deg, #16a34a 50%, #dc2626 50%);
+            background: linear-gradient(90deg, var(--color-realized-pos) 50%, var(--color-realized-neg) 50%);
         }}
 
         .legend-swatch.unrealized-swatch {{
-            background: linear-gradient(90deg, #4ade80 50%, #f87171 50%);
+            background: linear-gradient(90deg, var(--color-unrealized-pos) 50%, var(--color-unrealized-neg) 50%);
         }}
 
         .legend-diamond {{
