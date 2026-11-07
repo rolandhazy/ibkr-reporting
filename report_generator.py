@@ -495,6 +495,20 @@ def generate_html_report(
             white-space: nowrap;
         }}
 
+        .kpi-error {{
+            grid-column: 1 / -1;
+            padding: 7px 10px;
+            border: 1px solid var(--color-negative);
+            border-radius: 6px;
+            background: var(--color-negative-bg);
+            color: var(--color-negative);
+            font-size: 12px;
+        }}
+
+        .kpi-error[hidden] {{
+            display: none !important;
+        }}
+
         /* Unified Single-View Dashboard Container */
         .card {{
             background: var(--bg-card);
@@ -1311,19 +1325,22 @@ def generate_html_report(
                 <div class="kpi-strip">
                     <div class="kpi-item kpi-hero">
                         <span class="kpi-label">Net FIFO PnL</span>
-                        <span class="kpi-val" id="kpi-net-pnl">€0.00</span>
+                        <span class="kpi-val" id="kpi-net-pnl">—</span>
                     </div>
                     <div class="kpi-item">
                         <span class="kpi-label">Realized</span>
-                        <span class="kpi-val" id="kpi-realized-pnl">€0.00</span>
+                        <span class="kpi-val" id="kpi-realized-pnl">—</span>
                     </div>
                     <div class="kpi-item">
                         <span class="kpi-label">Unrealized</span>
-                        <span class="kpi-val" id="kpi-unrealized-pnl">€0.00</span>
+                        <span class="kpi-val" id="kpi-unrealized-pnl">—</span>
                     </div>
                     <div class="kpi-item">
                         <span class="kpi-label">Holdings</span>
-                        <span class="kpi-val" id="kpi-holdings-count" style="color: var(--color-accent);">{total_assets} Assets</span>
+                        <span class="kpi-val" id="kpi-holdings-count" style="color: var(--color-accent);">—</span>
+                    </div>
+                    <div id="kpi-error" class="kpi-error" role="alert" aria-live="assertive" hidden>
+                        Report data could not be initialized. Please reload the report.
                     </div>
                 </div>
             </div>
@@ -2305,8 +2322,14 @@ def generate_html_report(
 
         // Initialization
         window.addEventListener('DOMContentLoaded', () => {{
-            initThemeMode();
-            refreshDataAndViews();
+            try {{
+                initThemeMode();
+                refreshDataAndViews();
+            }} catch (error) {{
+                console.error('Report initialization failed:', error);
+                const errorEl = document.getElementById('kpi-error');
+                if (errorEl) errorEl.hidden = false;
+            }}
         }});
     </script>
 </body>
