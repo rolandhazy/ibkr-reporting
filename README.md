@@ -1,7 +1,6 @@
 # IBKR Portfolio Reporting & Theme Attribution
 
 [![Python Version](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 An automated portfolio analytics and reporting tool for **Interactive Brokers (IBKR)**. It fetches statements via the IBKR Flex Web Service, attributes realized and unrealized PnL across custom investment themes and underlying tickers, and compiles a rich, standalone interactive dashboard.
 
@@ -127,6 +126,24 @@ open public/index.html
 
 ---
 
+### Custom Time Slices
+By default, the dashboard is built from four time slices: `1d` (last business day), `7d` (last week), `30d` (last 30 days), and `ytd` (year-to-date). Use `--slices` to select a subset:
+
+```bash
+# Year-to-date only
+python main.py --slices ytd
+
+# Last business day and last week
+python main.py --slices 1d,7d
+
+# Custom combination
+python main.py --slices 30d,ytd
+```
+
+Valid slice keys: `1d`, `7d`, `30d`, `ytd`. Unknown keys are skipped with a warning. Each slice is fetched (or loaded from its own local cache) separately, so requesting more slices results in more Flex Web Service requests.
+
+---
+
 ### Generate Sampled Report (Development / Preview)
 To test UI changes or generate a sanitized preview using a random subset of your portfolio:
 
@@ -147,6 +164,7 @@ python main.py --output preview.html
 #### CLI Options Reference
 | Argument | Type | Default | Description |
 | :--- | :--- | :--- | :--- |
+| `--slices` | `string` | `1d,7d,30d,ytd` | Comma-separated time slices to generate. Valid keys: `1d`, `7d`, `30d`, `ytd`; unknown keys are skipped. |
 | `--sample-rate` | `float` | `None` (`0.3` if flag passed without value) | Fraction of portfolio to randomly sample (between `0.0` and `1.0`). |
 | `--seed` | `int` | `None` | Random seed for reproducible sampling (`None` produces fresh randomness each run). |
 | `--output` | `string` | `public/index.html` | File path for the generated HTML dashboard. |
@@ -195,9 +213,3 @@ Configured in [`.github/workflows/deploy-pages-dev.yml`](.github/workflows/deplo
 
 - **Do NOT commit `.env` or statement XML files**: Keep API credentials and downloaded financial reports private. Both `.env` and `*.xml` are included in `.gitignore`.
 - **Dev Sampling**: When previewing or testing publicly, utilize `--sample-rate` to avoid exposing the full composition and scale of your portfolio.
-
----
-
-## License
-
-This project is licensed under the [MIT License](LICENSE).

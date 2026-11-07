@@ -57,7 +57,9 @@ def generate_html_report(
     active_assets_count = sum(1 for t in default_tickers if t.get('IsActive'))
     initial_period = slices_payload.get(default_slice, {}).get("period", "") or period_str
 
-    slices_json = json.dumps(slices_payload)
+    # Escape '</' so no embedded description can terminate the script block early;
+    # the inserted backslash is a valid escape sequence in both JSON and JS strings.
+    slices_json = json.dumps(slices_payload).replace("</", "<\\/")
 
     # Slice switcher buttons HTML
     slice_buttons_html = ""
@@ -131,10 +133,10 @@ def generate_html_report(
             --color-positive-bg: rgba(5, 150, 105, 0.12);
             --color-negative: #e11d48;
             --color-negative-bg: rgba(225, 29, 72, 0.12);
-            --color-realized-pos: #16a34a;
-            --color-realized-neg: #dc2626;
-            --color-unrealized-pos: #16a34a;
-            --color-unrealized-neg: #dc2626;
+            --color-realized-pos: #15803d;
+            --color-realized-neg: #b91c1c;
+            --color-unrealized-pos: #0f766e;
+            --color-unrealized-neg: #c2410c;
             --color-accent: #0284c7;
             --color-accent-bg: rgba(2, 132, 199, 0.12);
             --input-bg: #ffffff;
@@ -491,6 +493,20 @@ def generate_html_report(
             font-size: 14px;
             font-weight: 700;
             white-space: nowrap;
+        }}
+
+        .kpi-error {{
+            grid-column: 1 / -1;
+            padding: 7px 10px;
+            border: 1px solid var(--color-negative);
+            border-radius: 6px;
+            background: var(--color-negative-bg);
+            color: var(--color-negative);
+            font-size: 12px;
+        }}
+
+        .kpi-error[hidden] {{
+            display: none !important;
         }}
 
         /* Unified Single-View Dashboard Container */
@@ -1108,11 +1124,11 @@ def generate_html_report(
         }}
 
         .legend-swatch.realized-swatch {{
-            background: linear-gradient(90deg, #16a34a 50%, #dc2626 50%);
+            background: linear-gradient(90deg, var(--color-realized-pos) 50%, var(--color-realized-neg) 50%);
         }}
 
         .legend-swatch.unrealized-swatch {{
-            background: linear-gradient(90deg, #4ade80 50%, #f87171 50%);
+            background: linear-gradient(90deg, var(--color-unrealized-pos) 50%, var(--color-unrealized-neg) 50%);
         }}
 
         .legend-diamond {{
@@ -1307,21 +1323,24 @@ def generate_html_report(
 
                 <!-- KPI Strip -->
                 <div class="kpi-strip">
-                    <div class="kpi-item kpi-hero">
+                    <div class="kpi-item">
                         <span class="kpi-label">Net FIFO PnL</span>
-                        <span class="kpi-val" id="kpi-net-pnl">€0.00</span>
+                        <span class="kpi-val" id="kpi-net-pnl">—</span>
                     </div>
                     <div class="kpi-item">
                         <span class="kpi-label">Realized</span>
-                        <span class="kpi-val" id="kpi-realized-pnl">€0.00</span>
+                        <span class="kpi-val" id="kpi-realized-pnl">—</span>
                     </div>
                     <div class="kpi-item">
                         <span class="kpi-label">Unrealized</span>
-                        <span class="kpi-val" id="kpi-unrealized-pnl">€0.00</span>
+                        <span class="kpi-val" id="kpi-unrealized-pnl">—</span>
                     </div>
                     <div class="kpi-item">
                         <span class="kpi-label">Holdings</span>
-                        <span class="kpi-val" id="kpi-holdings-count" style="color: var(--color-accent);">{total_assets} Assets</span>
+                        <span class="kpi-val" id="kpi-holdings-count" style="color: var(--color-accent);">—</span>
+                    </div>
+                    <div id="kpi-error" class="kpi-error" role="alert" aria-live="assertive" hidden>
+                        Report data could not be initialized. Please reload the report.
                     </div>
                 </div>
             </div>
@@ -2303,8 +2322,14 @@ def generate_html_report(
 
         // Initialization
         window.addEventListener('DOMContentLoaded', () => {{
-            initThemeMode();
-            refreshDataAndViews();
+            try {{
+                initThemeMode();
+                refreshDataAndViews();
+            }} catch (error) {{
+                console.error('Report initialization failed:', error);
+                const errorEl = document.getElementById('kpi-error');
+                if (errorEl) errorEl.hidden = false;
+            }}
         }});
     </script>
 </body>
