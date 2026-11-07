@@ -1,0 +1,263 @@
+name: Draft Release on Merge to Main
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - closed
+  workflow_dispatch:
+    inputs:
+      override_tag:
+        description: 'Optional tag override (e.g. v1.2.4). If omitted, version is calculated automatically.'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  draft-release:
+    # Run only if the PR was merged into main (or manually triggered)
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Full history needed for tags and commit comparisons
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Generate Release Notes and Draft Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          EVENT_NAME: ${{ github.event_name }}
+          PR_TITLE: ${{ github.event.pull_request.title || '' }}
+          PR_BODY: ${{ github.event.pull_request.body || '' }}
+          PR_BASE_REF: ${{ github.event.pull_request.base.ref || 'main' }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha || '' }}
+          REPOSITORY: ${{ github.repository }}
+          OVERRIDE_TAG: ${{ github.event.inputs.override_tag || '' }}
+        run: |
+          python - << 'EOF'
+          import json
+          import os
+          import re
+          import subprocess
+          import urllib.request
+          import urllib.error
+
+          repo = os.environ.get("REPOSITORY", "")
+          token = os.environ.get("GITHUB_TOKEN", "")
+          pr_title = os.environ.get("PR_TITLE", "").strip()
+          pr_body = os.environ.get("PR_BODY", "").strip()
+          override_tag = os.environ.get("OVERRIDE_TAG", "").strip()
+
+          # 1. Determine latest git tag (matching vX.Y.Z)
+          tag_output = subprocess.run(
+              ["git", "tag", "-l", "v[0-9]*.[0-9]*.[0-9]*", "--sort=-v:refname"],
+              stdout=subprocess.PIPE,
+              stderr=subprocess.PIPE,
+              text=True,
+              check=True
+          )
+          tags = [t.strip() for t in tag_output.stdout.splitlines() if t.strip()]
+          latest_tag = tags[0] if tags else "v1.0.0"
+          print(f"Latest existing tag: {latest_tag}")
+
+          # 2. Get commits between latest tag and HEAD
+          rev_range = f"{latest_tag}..HEAD" if tags else "HEAD"
+          log_output = subprocess.run(
+              ["git", "log", rev_range, "--pretty=format:%h %s"],
+              stdout=subprocess.PIPE,
+              stderr=subprocess.PIPE,
+              text=True,
+              check=True
+          )
+          commit_lines = [l.strip() for l in log_output.stdout.splitlines() if l.strip()]
+          print(f"Commits since {latest_tag}: {len(commit_lines)}")
+
+          # Categorize commits
+          features = []
+          fixes = []
+          styles = []
+          docs = []
+          chores = []
+          others = []
+
+          has_breaking = False
+          has_feature = False
+
+          for line in commit_lines:
+              parts = line.split(" ", 1)
+              if len(parts) == 2:
+                  sha, subject = parts
+              else:
+                  sha, subject = parts[0], ""
+
+              lower = subject.lower()
+              if "breaking change" in lower or re.match(r"^[a-z]+!:", lower):
+                  has_breaking = True
+
+              if re.match(r"^feat(\([^\)]+\))?:", lower):
+                  has_feature = True
+                  features.append((sha, subject))
+              elif re.match(r"^fix(\([^\)]+\))?:", lower):
+                  fixes.append((sha, subject))
+              elif re.match(r"^(style|refactor)(\([^\)]+\))?:", lower):
+                  styles.append((sha, subject))
+              elif re.match(r"^docs(\([^\)]+\))?:", lower):
+                  docs.append((sha, subject))
+              elif re.match(r"^(chore|ci|test|perf)(\([^\)]+\))?:", lower):
+                  chores.append((sha, subject))
+              else:
+                  others.append((sha, subject))
+
+          # Check PR title for type hint if no commits detected (e.g. squash merge)
+          if pr_title:
+              pr_lower = pr_title.lower()
+              if "breaking change" in pr_lower or re.match(r"^[a-z]+!:", pr_lower):
+                  has_breaking = True
+              elif re.match(r"^feat(\([^\)]+\))?:", pr_lower):
+                  has_feature = True
+
+          # 3. Educated guess for next version
+          match = re.match(r"^v?(\d+)\.(\d+)\.(\d+)$", latest_tag)
+          if match:
+              major, minor, patch = map(int, match.groups())
+              if has_breaking:
+                  bump_type = "major"
+                  next_version = f"v{major + 1}.0.0"
+              elif has_feature:
+                  bump_type = "minor"
+                  next_version = f"v{major}.{minor + 1}.0"
+              else:
+                  bump_type = "patch"
+                  next_version = f"v{major}.{minor}.{patch + 1}"
+          else:
+              bump_type = "patch"
+              next_version = "v1.2.4"
+
+          if override_tag:
+              next_version = override_tag if override_tag.startswith("v") else f"v{override_tag}"
+              print(f"Using manual tag override: {next_version}")
+          else:
+              print(f"Calculated bump ({bump_type}): {latest_tag} -> {next_version}")
+
+          # 4. Generate release title & body matching existing repo conventions
+          clean_title_summary = pr_title
+          if clean_title_summary:
+              # Remove conventional prefix for release title subtitle if present
+              clean_title_summary = re.sub(r"^[a-z]+(\([^\)]+\))?:\s*", "", clean_title_summary, flags=re.I)
+              clean_title_summary = clean_title_summary[:1].upper() + clean_title_summary[1:]
+          else:
+              clean_title_summary = "Updates and Improvements"
+
+          release_title = f"{next_version} — {clean_title_summary}"
+
+          # Format body based on release type (Rich format for minor/major, concise for patch)
+          body_lines = []
+
+          def clean_commit_desc(desc):
+              # Strip commit type prefix for cleaner reading
+              cleaned = re.sub(r"^[a-z]+(\([^\)]+\))?:\s*", "", desc, flags=re.I)
+              return cleaned[:1].upper() + cleaned[1:]
+
+          if bump_type in ("minor", "major"):
+              body_lines.append(f"## What's New in {next_version}")
+              body_lines.append("")
+
+              if features:
+                  body_lines.append("### 🚀 Features & Enhancements")
+                  for sha, desc in features:
+                      body_lines.append(f"- **{clean_commit_desc(desc)}** (`{sha}`)")
+                  body_lines.append("")
+
+              if fixes:
+                  body_lines.append("### 🐛 Bug Fixes")
+                  for sha, desc in fixes:
+                      body_lines.append(f"- {clean_commit_desc(desc)} (`{sha}`)")
+                  body_lines.append("")
+
+              if styles:
+                  body_lines.append("### 🎨 Styling & UI Refinements")
+                  for sha, desc in styles:
+                      body_lines.append(f"- {clean_commit_desc(desc)} (`{sha}`)")
+                  body_lines.append("")
+
+              if docs:
+                  body_lines.append("### 📖 Documentation")
+                  for sha, desc in docs:
+                      body_lines.append(f"- {clean_commit_desc(desc)} (`{sha}`)")
+                  body_lines.append("")
+
+              if chores or others:
+                  body_lines.append("### ⚙️ Maintenance & Chores")
+                  for sha, desc in (chores + others):
+                      body_lines.append(f"- {clean_commit_desc(desc)} (`{sha}`)")
+                  body_lines.append("")
+
+          else:
+              # Patch release style (like v1.2.1 and v1.2.2)
+              body_lines.append("## What's Changed")
+              body_lines.append("")
+              all_items = fixes + features + styles + docs + chores + others
+              if all_items:
+                  for sha, desc in all_items:
+                      body_lines.append(f"- {clean_commit_desc(desc)} (`{sha}`)")
+              else:
+                  body_lines.append(f"- {clean_title_summary}")
+              body_lines.append("")
+              body_lines.append("## Fixes")
+              body_lines.append("")
+              body_lines.append(f"This patch release includes maintenance and bug fixes merged in PR: {pr_title or clean_title_summary}.")
+              body_lines.append("")
+
+          # Append changelog link
+          body_lines.append("---")
+          body_lines.append(f"**Full Changelog**: https://github.com/{repo}/compare/{latest_tag}...{next_version}")
+
+          release_body = "\n".join(body_lines)
+          print("=== DRAFT RELEASE PREVIEW ===")
+          print(f"Tag:   {next_version}")
+          print(f"Title: {release_title}")
+          print(release_body)
+          print("=============================")
+
+          # 5. Create Draft Release via GitHub API
+          api_url = f"https://api.github.com/repos/{repo}/releases"
+          payload = {
+              "tag_name": next_version,
+              "target_commitish": "main",
+              "name": release_title,
+              "body": release_body,
+              "draft": True,
+              "prerelease": False
+          }
+
+          req = urllib.request.Request(
+              api_url,
+              data=json.dumps(payload).encode("utf-8"),
+              headers={
+                  "Authorization": f"Bearer {token}",
+                  "Accept": "application/vnd.github+json",
+                  "Content-Type": "application/json",
+                  "User-Agent": "GitHubActions-DraftRelease"
+              },
+              method="POST"
+          )
+
+          try:
+              with urllib.request.urlopen(req) as resp:
+                  resp_data = json.loads(resp.read().decode())
+                  print(f"Successfully created draft release: {resp_data.get('html_url')}")
+          except urllib.error.HTTPError as e:
+              err_text = e.read().decode()
+              print(f"HTTPError {e.code}: {err_text}")
+              raise
+          EOF
