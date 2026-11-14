@@ -2,8 +2,9 @@
 
 import argparse
 import sys
-from flex_client import get_flex_report, get_time_slice_reports, TIME_SLICE_CONFIG
-from parser import parse_xml_to_df, extract_statement_metadata
+
+from flex_client import TIME_SLICE_CONFIG, get_flex_report, get_time_slice_reports
+from parser import extract_statement_metadata, parse_xml_to_df
 from report_generator import generate_html_report
 
 
@@ -43,13 +44,19 @@ def main(argv: list[str] | None = None, sample_rate: float | None = None) -> int
     effective_sample_rate = sample_rate if sample_rate is not None else args.sample_rate
 
     try:
-        requested_slices = [s.strip().lower() for s in args.slices.split(",") if s.strip()]
+        requested_slices = [
+            s.strip().lower() for s in args.slices.split(",") if s.strip()
+        ]
 
-        print(f"1. Fetching / resolving Flex reports for slices: {', '.join(requested_slices)}...")
+        print(
+            f"1. Fetching / resolving Flex reports for slices: {', '.join(requested_slices)}..."
+        )
         slice_xmls = get_time_slice_reports(requested_slices=requested_slices)
 
         if not slice_xmls:
-            print("Notice: No time-slice reports retrieved. Falling back to default Flex report...")
+            print(
+                "Notice: No time-slice reports retrieved. Falling back to default Flex report..."
+            )
             xml_data = get_flex_report()
             slice_xmls = {"ytd": xml_data}
 
@@ -57,7 +64,9 @@ def main(argv: list[str] | None = None, sample_rate: float | None = None) -> int
         slices_data = {}
         for slice_key, xml_data in slice_xmls.items():
             meta = extract_statement_metadata(xml_data)
-            df_slice = parse_xml_to_df(xml_data, sample_rate=effective_sample_rate, random_state=args.seed)
+            df_slice = parse_xml_to_df(
+                xml_data, sample_rate=effective_sample_rate, random_state=args.seed
+            )
 
             cfg = TIME_SLICE_CONFIG.get(slice_key, {})
             period_str = ""
@@ -70,19 +79,24 @@ def main(argv: list[str] | None = None, sample_rate: float | None = None) -> int
                 "period": period_str,
                 "df": df_slice,
             }
-            print(f"   [{cfg.get('label', slice_key.upper())}] {len(df_slice)} assets | {period_str}")
+            print(
+                f"   [{cfg.get('label', slice_key.upper())}] {len(df_slice)} assets | {period_str}"
+            )
 
         print("3. Generating dashboard HTML...")
-        default_slice = "ytd" if "ytd" in slices_data else next(iter(slices_data.keys()))
-        generate_html_report(slices_data, output_path=args.output, default_slice=default_slice)
+        default_slice = (
+            "ytd" if "ytd" in slices_data else next(iter(slices_data.keys()))
+        )
+        generate_html_report(
+            slices_data, output_path=args.output, default_slice=default_slice
+        )
 
         print(f"Successfully built {args.output}")
         return 0
-    except Exception as e:
+    except (RuntimeError, ValueError, TimeoutError, OSError, KeyError) as e:
         print(f"Error during report generation: {e}", file=sys.stderr)
         return 1
 
 
 if __name__ == "__main__":
     sys.exit(main())
-
