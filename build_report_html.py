@@ -1,6 +1,7 @@
 """Entry point wrapper to preserve backward compatibility with existing workflows."""
 
 import sys
+
 from main import main
 
 if __name__ == "__main__":

@@ -2,6 +2,7 @@
 
 import json
 import os
+
 import pandas as pd
 
 
@@ -18,7 +19,7 @@ def generate_html_report(
                 "label": "YTD",
                 "title": "Year-to-Date",
                 "period": period_str,
-                "df": data
+                "df": data,
             }
         }
     else:
@@ -30,32 +31,41 @@ def generate_html_report(
     slices_payload = {}
     for key, sinfo in slices_input.items():
         df_slice = sinfo["df"]
-        ticker_summary = df_slice.groupby(['Theme', 'UnderlyingSymbol']).agg(
-            Description=('Description', 'first'),
-            TotalFifoPnl=('TotalFifoPnl', 'sum'),
-            RealizedPnl=('TotalRealizedPnl', 'sum'),
-            UnrealizedPnl=('TotalUnrealizedPnl', 'sum'),
-            Count=('Symbol', 'count')
-        ).reset_index()
+        ticker_summary = (
+            df_slice.groupby(["Theme", "UnderlyingSymbol"])
+            .agg(
+                Description=("Description", "first"),
+                TotalFifoPnl=("TotalFifoPnl", "sum"),
+                RealizedPnl=("TotalRealizedPnl", "sum"),
+                UnrealizedPnl=("TotalUnrealizedPnl", "sum"),
+                Count=("Symbol", "count"),
+            )
+            .reset_index()
+        )
 
-        ticker_summary['Description'] = ticker_summary['Description'].fillna(ticker_summary['UnderlyingSymbol'])
-        ticker_summary['TotalFifoPnl'] = ticker_summary['TotalFifoPnl'].round(2)
-        ticker_summary['RealizedPnl'] = ticker_summary['RealizedPnl'].round(2)
-        ticker_summary['UnrealizedPnl'] = ticker_summary['UnrealizedPnl'].round(2)
-        ticker_summary['IsActive'] = (ticker_summary['UnrealizedPnl'].abs() > 0.001).astype(bool)
+        ticker_summary["Description"] = ticker_summary["Description"].fillna(
+            ticker_summary["UnderlyingSymbol"]
+        )
+        ticker_summary["TotalFifoPnl"] = ticker_summary["TotalFifoPnl"].round(2)
+        ticker_summary["RealizedPnl"] = ticker_summary["RealizedPnl"].round(2)
+        ticker_summary["UnrealizedPnl"] = ticker_summary["UnrealizedPnl"].round(2)
+        ticker_summary["IsActive"] = (
+            ticker_summary["UnrealizedPnl"].abs() > 0.001
+        ).astype(bool)
 
         slices_payload[key] = {
             "label": sinfo.get("label", key.upper()),
             "title": sinfo.get("title", key.upper()),
             "period": sinfo.get("period", ""),
-            "tickers": ticker_summary.to_dict(orient='records'),
+            "tickers": ticker_summary.to_dict(orient="records"),
         }
 
     # Initial metrics from default slice
     default_tickers = slices_payload.get(default_slice, {}).get("tickers", [])
-    total_assets = len(set(t['UnderlyingSymbol'] for t in default_tickers))
-    active_assets_count = sum(1 for t in default_tickers if t.get('IsActive'))
-    initial_period = slices_payload.get(default_slice, {}).get("period", "") or period_str
+    active_assets_count = sum(1 for t in default_tickers if t.get("IsActive"))
+    initial_period = (
+        slices_payload.get(default_slice, {}).get("period", "") or period_str
+    )
 
     # Escape '</' so no embedded description can terminate the script block early;
     # the inserted backslash is a valid escape sequence in both JSON and JS strings.
@@ -69,7 +79,11 @@ def generate_html_report(
         s_label = s.get("label", "")
         slice_buttons_html += f'<button class="slice-btn{active_cls}" data-slice="{k}" onclick="switchTimeSlice(\'{k}\')" title="{s_title}">{s_label}</button>\n'
 
-    slice_switcher_html = f'<div class="slice-switcher" role="tablist" id="time-slice-switcher">\n{slice_buttons_html}</div>' if len(slices_payload) > 1 else ""
+    slice_switcher_html = (
+        f'<div class="slice-switcher" role="tablist" id="time-slice-switcher">\n{slice_buttons_html}</div>'
+        if len(slices_payload) > 1
+        else ""
+    )
 
     period_badge_html = f'<div class="reporting-period" id="reporting-period-badge" style="{"display: inline-block;" if initial_period else "display: none;"}">{initial_period}</div>'
 
@@ -89,6 +103,7 @@ def generate_html_report(
     <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
     <style>
         :root {{
+            color-scheme: dark;
             --bg-page: #090d16;
             --bg-card: #111827;
             --bg-card-header: #151d30;
@@ -121,6 +136,7 @@ def generate_html_report(
         }}
 
         [data-theme="light"] {{
+            color-scheme: light;
             --bg-page: #f1f5f9;
             --bg-card: #ffffff;
             --bg-card-header: #f8fafc;
@@ -162,6 +178,7 @@ def generate_html_report(
             color: var(--text-primary);
             padding: 14px;
             line-height: 1.4;
+            scrollbar-gutter: stable;
             -webkit-font-smoothing: antialiased;
             transition: background 0.2s ease, color 0.2s ease;
         }}
@@ -492,6 +509,7 @@ def generate_html_report(
             font-family: var(--font-mono);
             font-size: 14px;
             font-weight: 700;
+            font-variant-numeric: tabular-nums;
             white-space: nowrap;
         }}
 
@@ -815,6 +833,7 @@ def generate_html_report(
             max-height: clamp(380px, calc(100vh - 240px), 820px);
             overflow-y: auto;
             overflow-x: auto;
+            scrollbar-gutter: stable;
             -webkit-overflow-scrolling: touch;
             position: relative;
             width: 100%;
@@ -838,7 +857,7 @@ def generate_html_report(
             text-align: left;
             padding: 9px 12px;
             border-bottom: 1px solid var(--border-color);
-            z-index: 2;
+            z-index: 10;
             font-size: 11px;
             text-transform: uppercase;
             letter-spacing: 0.03em;
@@ -939,6 +958,7 @@ def generate_html_report(
             text-align: right;
             font-family: var(--font-mono);
             font-size: 12px;
+            font-variant-numeric: tabular-nums;
             white-space: nowrap;
         }}
 
@@ -1270,7 +1290,11 @@ def generate_html_report(
             }}
         }}
 
-        /* Custom Scrollbar */
+        /* Modern Standard Scrollbars & WebKit Fallback */
+        * {{
+            scrollbar-color: var(--border-color) var(--bg-card);
+            scrollbar-width: thin;
+        }}
         ::-webkit-scrollbar {{
             width: 5px;
             height: 5px;
@@ -1284,6 +1308,15 @@ def generate_html_report(
         }}
         ::-webkit-scrollbar-thumb:hover {{
             background: var(--text-muted);
+        }}
+
+        @media (prefers-reduced-motion: reduce) {{
+            *, ::before, ::after {{
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+                scroll-behavior: auto !important;
+            }}
         }}
     </style>
 </head>
@@ -1377,7 +1410,7 @@ def generate_html_report(
             <!-- Toolbar: Ticker Search Bar & Performer Highlights -->
             <div class="toolbar">
                 <div class="ticker-search-box">
-                    <input id="ticker-search" type="text" placeholder="Search ticker or company (e.g. NVDA, Airbus, Boeing)..." oninput="handleTickerSearch(this.value)">
+                    <input id="ticker-search" type="search" placeholder="Search ticker or company (e.g. NVDA, Airbus, Boeing)..." enterkeyhint="search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" role="searchbox" aria-label="Search ticker or company" oninput="handleTickerSearch(this.value)">
                     <button id="search-clear-btn" class="search-clear-btn" onclick="clearTickerSearch()" title="Clear search">✕</button>
                 </div>
 
@@ -1405,7 +1438,7 @@ def generate_html_report(
             </div>
 
             <!-- Viewport 1: Table View -->
-            <div id="table-view-container" class="table-container">
+            <div id="table-view-container" class="table-container" role="region" aria-label="Portfolio performance table" tabindex="0">
                 <table id="main-table">
                     <thead id="table-head">
                         <!-- Rendered dynamically depending on level (Themes vs Tickers) -->
@@ -1504,6 +1537,13 @@ def generate_html_report(
                 return `<span class="sort-indicator active">${{sortDirection === 'asc' ? '▲' : '▼'}}</span>`;
             }}
             return `<span class="sort-indicator">↕</span>`;
+        }}
+
+        function getAriaSort(col) {{
+            if (sortColumn === col) {{
+                return sortDirection === 'asc' ? 'ascending' : 'descending';
+            }}
+            return 'none';
         }}
 
         function sortItems(items) {{
@@ -1895,9 +1935,9 @@ def generate_html_report(
                 <tr>
                     <th class="col-theme">Theme</th>
                     <th class="col-assets" style="text-align:center;">Assets</th>
-                    <th class="num col-hide-mobile col-realized sortable-th" onclick="setSort('realized')" title="Sort by Realized PnL">Realized ${{getSortIndicator('realized')}}</th>
-                    <th class="num col-hide-mobile col-unrealized sortable-th" onclick="setSort('unrealized')" title="Sort by Unrealized PnL">Unrealized ${{getSortIndicator('unrealized')}}</th>
-                    <th class="num col-pnl sortable-th" onclick="setSort('pnl')" title="Sort by Net FIFO PnL">Net PnL ${{getSortIndicator('pnl')}}</th>
+                    <th class="num col-hide-mobile col-realized sortable-th" onclick="setSort('realized')" aria-sort="${{getAriaSort('realized')}}" title="Sort by Realized PnL">Realized ${{getSortIndicator('realized')}}</th>
+                    <th class="num col-hide-mobile col-unrealized sortable-th" onclick="setSort('unrealized')" aria-sort="${{getAriaSort('unrealized')}}" title="Sort by Unrealized PnL">Unrealized ${{getSortIndicator('unrealized')}}</th>
+                    <th class="num col-pnl sortable-th" onclick="setSort('pnl')" aria-sort="${{getAriaSort('pnl')}}" title="Sort by Net FIFO PnL">Net PnL ${{getSortIndicator('pnl')}}</th>
                 </tr>
             `;
 
@@ -1968,9 +2008,9 @@ def generate_html_report(
                     <th class="col-ticker">Ticker</th>
                     <th class="col-desc">Description</th>
                     ${{showThemeColumn ? '<th class="col-theme-tag">Theme</th>' : ''}}
-                    <th class="num col-hide-mobile col-realized sortable-th" onclick="setSort('realized')" title="Sort by Realized PnL">Realized ${{getSortIndicator('realized')}}</th>
-                    <th class="num col-hide-mobile col-unrealized sortable-th" onclick="setSort('unrealized')" title="Sort by Unrealized PnL">Unrealized ${{getSortIndicator('unrealized')}}</th>
-                    <th class="num col-pnl sortable-th" onclick="setSort('pnl')" title="Sort by Net FIFO PnL">Net PnL ${{getSortIndicator('pnl')}}</th>
+                    <th class="num col-hide-mobile col-realized sortable-th" onclick="setSort('realized')" aria-sort="${{getAriaSort('realized')}}" title="Sort by Realized PnL">Realized ${{getSortIndicator('realized')}}</th>
+                    <th class="num col-hide-mobile col-unrealized sortable-th" onclick="setSort('unrealized')" aria-sort="${{getAriaSort('unrealized')}}" title="Sort by Unrealized PnL">Unrealized ${{getSortIndicator('unrealized')}}</th>
+                    <th class="num col-pnl sortable-th" onclick="setSort('pnl')" aria-sort="${{getAriaSort('pnl')}}" title="Sort by Net FIFO PnL">Net PnL ${{getSortIndicator('pnl')}}</th>
                 </tr>
             `;
 
@@ -2256,10 +2296,20 @@ def generate_html_report(
         /* Light / Dark Mode Handling */
         function initThemeMode() {{
             const saved = localStorage.getItem('ibkr_theme_mode');
-            if (saved === 'light') {{
+            if (saved) {{
+                applyThemeMode(saved);
+            }} else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {{
                 applyThemeMode('light');
             }} else {{
                 applyThemeMode('dark');
+            }}
+
+            if (window.matchMedia) {{
+                window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', e => {{
+                    if (!localStorage.getItem('ibkr_theme_mode')) {{
+                        applyThemeMode(e.matches ? 'light' : 'dark');
+                    }}
+                }});
             }}
         }}
 
@@ -2309,16 +2359,32 @@ def generate_html_report(
             renderDashboard();
         }}
 
-        // Handle responsive window resize
+        // Handle responsive chart resize via ResizeObserver with debounced window resize fallback
         let resizeTimer;
         window.addEventListener('resize', () => {{
             clearTimeout(resizeTimer);
             resizeTimer = setTimeout(() => {{
-                if (currentMode === 'graph') {{
-                    renderDashboard();
+                if (currentMode === 'graph' && window.Plotly) {{
+                    requestAnimationFrame(() => {{
+                        Plotly.Plots.resize('main-chart');
+                    }});
                 }}
             }}, 120);
         }});
+
+        if (window.ResizeObserver) {{
+            const chartWrapper = document.querySelector('.chart-wrapper');
+            if (chartWrapper) {{
+                const observer = new ResizeObserver(() => {{
+                    if (currentMode === 'graph' && window.Plotly) {{
+                        requestAnimationFrame(() => {{
+                            Plotly.Plots.resize('main-chart');
+                        }});
+                    }}
+                }});
+                observer.observe(chartWrapper);
+            }}
+        }}
 
         // Initialization
         window.addEventListener('DOMContentLoaded', () => {{
