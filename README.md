@@ -15,7 +15,7 @@ An automated portfolio analytics and reporting tool for **Interactive Brokers (I
   - Classifies positions and underlying symbols into macro/sector themes (e.g., *Big Tech*, *AI & Chips*, *Software*, *Energy*, *Space & Defense*, *Broad Market*, *Hedges*, etc.).
   - Unmapped tickers automatically fall back to `"Other"` for easy tracking.
 - **Interactive Standalone Dashboard (`public/index.html`)**:
-  - **KPI Header**: Net FIFO PnL, Realized PnL, Unrealized PnL, and Active Holding counts.
+  - **KPI Header**: Net FIFO PnL, Realized PnL, Unrealized PnL, and Holdings.
   - **Dynamic Visualizations**: Plotly bar charts, realized/unrealized breakdown, and net diamonds.
   - **Deep-Dive Drilldown**: Click on any theme to inspect constituent individual tickers and their contributions.
   - **Holdings Toggle**: Switch between currently open/active positions and complete historical performance.
@@ -52,6 +52,9 @@ ibkr-reporting/
 │   └── workflows/
 │       ├── deploy.yml            # Production deployment to Cloudflare
 │       └── deploy-pages-dev.yml  # Dev preview deployment to GitHub Pages
+├── tests/
+│   └── test_report_generator.py  # Report generation and serialization tests
+├── dashboard_behavior_contract.md # Dashboard filtering and KPI behavior contract
 ├── flex_client.py                # IBKR Flex API client with polling & local caching
 ├── parser.py                     # XML statement parser & portfolio sampling logic
 ├── theme_map.py                  # Ticker-to-theme mapping definitions
@@ -59,7 +62,7 @@ ibkr-reporting/
 ├── main.py                       # CLI orchestrator & pipeline entry point
 ├── build_report_html.py          # Legacy/workflow entry point wrapper
 ├── wrangler.jsonc                # Cloudflare Pages/Assets configuration
-├── requirements.txt              # Minimal project dependencies
+├── requirements.txt              # Production project dependencies
 └── .env                          # Local credentials (git-ignored)
 ```
 
@@ -92,7 +95,7 @@ cd ibkr-reporting
 python3 -m venv .venv
 source .venv/bin/activate
 
-# Install requirements
+# Install project dependencies
 pip install -r requirements.txt
 ```
 
@@ -168,6 +171,21 @@ python main.py --output preview.html
 | `--sample-rate` | `float` | `None` (`0.3` if flag passed without value) | Fraction of portfolio to randomly sample (between `0.0` and `1.0`). |
 | `--seed` | `int` | `None` | Random seed for reproducible sampling (`None` produces fresh randomness each run). |
 | `--output` | `string` | `public/index.html` | File path for the generated HTML dashboard. |
+
+---
+
+## Testing
+
+The test suite uses synthetic local data and does not require live IBKR requests. The current pytest tests cover report generation, aggregation, and embedded-payload serialization. Dashboard interaction behaviors in the [behavior contract](dashboard_behavior_contract.md) are documented expectations; they are not all covered by automated tests yet.
+
+Install pytest in your active virtual environment, then run the tests from the repository root:
+
+```bash
+pip install pytest
+python -m pytest
+```
+
+Pytest is a development-only dependency and is intentionally not included in `requirements.txt`.
 
 ---
 
