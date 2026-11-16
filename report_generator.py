@@ -245,6 +245,13 @@ def generate_html_report(
             gap: 8px;
         }}
 
+        .display-controls {{
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            flex: 0 0 auto;
+        }}
+
         /* Time Slice Segmented Switcher */
         .slice-switcher {{
             display: inline-flex;
@@ -407,7 +414,7 @@ def generate_html_report(
             }}
         }}
 
-        /* Phone layout: keep controls inside the viewport while preserving the desktop/tablet layout above. */
+        /* Phone layout: keep global controls paired and compact dashboard rows. */
         @media (max-width: 640px) {{
             html, body {{
                 max-width: 100%;
@@ -431,6 +438,10 @@ def generate_html_report(
                 flex-wrap: wrap;
                 row-gap: 6px;
             }}
+            .display-controls {{
+                flex-wrap: nowrap;
+                margin-left: auto;
+            }}
             .slice-switcher {{
                 flex: 0 0 auto;
                 width: max-content;
@@ -445,66 +456,171 @@ def generate_html_report(
                 max-width: 100%;
                 overflow-wrap: anywhere;
             }}
+            .card-header {{
+                grid-template-columns: minmax(0, 1fr);
+                gap: 8px;
+                padding: 8px;
+            }}
+            .breadcrumb-nav {{
+                min-width: 0;
+            }}
+            .card-search-box {{
+                grid-row: 2;
+                max-width: none;
+                justify-self: stretch;
+            }}
             .toolbar {{
                 display: grid;
-                grid-template-columns: minmax(0, 1fr) auto;
+                grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
                 align-items: center;
                 padding: 8px;
-                gap: 8px;
-            }}
-            .ticker-search-box {{
-                grid-column: 1;
-                width: 100%;
-                max-width: none;
-                min-width: 0;
+                gap: 7px;
             }}
             .toolbar-right {{
                 display: contents;
             }}
             .pnl-threshold-control {{
-                grid-column: 2;
-                justify-self: end;
-                min-width: max-content;
+                grid-column: 1;
+                justify-self: start;
+                flex-wrap: nowrap;
+                gap: 3px;
+                min-width: 0;
+            }}
+            .pnl-threshold-label {{
+                font-size: 9px;
+                letter-spacing: 0;
+            }}
+            .threshold-mode-group {{
+                gap: 0;
+                padding: 1px;
+            }}
+            .threshold-mode-btn {{
+                min-width: 22px;
+                min-height: 25px;
+                padding: 2px 5px;
+            }}
+            .toolbar-number-input {{
+                width: clamp(48px, 17vw, 72px);
+                min-width: 0;
+                padding: 4px 4px;
+                font-size: 10px;
             }}
             .sort-control {{
-                grid-column: 1 / -1;
-                justify-self: start;
+                grid-column: 2;
+                justify-self: stretch;
+                min-width: 0;
+                gap: 3px;
+            }}
+            .sort-label {{
+                display: none;
+            }}
+            .sort-control {{
+                justify-self: end;
+                width: max-content;
                 max-width: 100%;
-                flex-wrap: wrap;
             }}
             .sort-btn-group {{
-                max-width: 100%;
-                flex-wrap: wrap;
+                display: none;
+            }}
+            .sort-mobile-control {{
+                display: inline-flex;
+                align-items: center;
+                min-width: 0;
+                background: var(--input-bg);
+                border: 1px solid var(--border-color);
+                border-radius: 8px;
+                padding: 2px;
+                gap: 2px;
+            }}
+            .sort-mobile-select {{
+                appearance: none;
+                min-width: 0;
+                max-width: 112px;
+                border: 0;
+                border-radius: 6px;
+                padding: 5px 18px 5px 7px;
+                color: var(--color-accent);
+                background: var(--border-color);
+                font: 700 10px var(--font-main);
+                cursor: pointer;
+                background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%);
+                background-position: calc(100% - 8px) 50%, calc(100% - 5px) 50%;
+                background-size: 3px 3px, 3px 3px;
+                background-repeat: no-repeat;
+            }}
+            .sort-direction-btn {{
+                min-width: 28px;
+                min-height: 28px;
+                border: 0;
+                border-radius: 6px;
+                background: transparent;
+                color: var(--text-secondary);
+                font: 700 12px var(--font-main);
+                cursor: pointer;
+            }}
+            .sort-direction-btn:hover {{
+                color: var(--color-accent);
+                background: var(--ratio-track-bg);
+            }}
+            .sort-direction-btn:focus-visible,
+            .sort-mobile-select:focus-visible {{
+                outline: 2px solid var(--color-accent);
+                outline-offset: 1px;
             }}
             .performer-highlights {{
                 grid-column: 1 / -1;
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 6px;
                 min-width: 0;
+            }}
+            .performer-badge {{
+                min-width: 0;
+                max-width: 100%;
+                overflow: hidden;
+                gap: 3px;
+                padding: 3px 5px;
+                font-size: 9px;
+            }}
+            .performer-badge strong,
+            .performer-badge .performer-label,
+            .performer-badge .performer-value {{
+                min-width: 0;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }}
+            .performer-badge strong {{
+                flex: 0 1 auto;
+            }}
+            .performer-badge .performer-value {{
+                flex: 0 1 auto;
+                white-space: nowrap;
             }}
         }}
 
-        @media (max-width: 520px) {{
-            .toolbar {{
-                grid-template-columns: minmax(0, 1fr);
+        @media (max-width: 380px) {{
+            .header-controls {{
+                gap: 5px;
             }}
-            .ticker-search-box,
-            .pnl-threshold-control,
-            .sort-control,
+            .slice-btn {{
+                padding-left: 6px;
+                padding-right: 6px;
+            }}
+            .filter-toggle-pill {{
+                gap: 4px;
+                padding: 5px 7px;
+            }}
+            .header-btn {{
+                padding: 5px 7px;
+            }}
+            .pnl-threshold-label {{
+                font-size: 8px;
+            }}
+            .toolbar-number-input {{
+                width: 48px;
+            }}
             .performer-highlights {{
-                grid-column: 1;
-                justify-self: stretch;
-            }}
-            .pnl-threshold-control {{
-                min-width: 0;
-            }}
-            .sort-control {{
-                width: 100%;
-            }}
-            .sort-btn-group {{
-                flex: 1 1 auto;
-            }}
-            .sort-pill-btn {{
-                flex: 1 1 auto;
-                justify-content: center;
+                gap: 4px;
             }}
         }}
 
@@ -596,11 +712,16 @@ def generate_html_report(
             background: var(--bg-card-header);
             padding: 10px 14px;
             border-bottom: 1px solid var(--border-color);
-            display: flex;
-            justify-content: space-between;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(180px, 320px);
             align-items: center;
             gap: 10px;
-            flex-wrap: wrap;
+        }}
+
+        .card-search-box {{
+            width: 100%;
+            max-width: 320px;
+            justify-self: end;
         }}
 
         .breadcrumb-nav {{
@@ -914,6 +1035,14 @@ def generate_html_report(
             box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
         }}
 
+        .sort-short-label {{
+            display: none;
+        }}
+
+        .sort-mobile-control {{
+            display: none;
+        }}
+
         .sort-arrow {{
             font-size: 9px;
             line-height: 1;
@@ -1004,6 +1133,99 @@ def generate_html_report(
 
         .performer-badge strong {{
             font-weight: 700;
+        }}
+
+        /* Final responsive overrides follow base component rules intentionally. */
+        @media (max-width: 640px) {{
+            .card-header {{
+                grid-template-columns: minmax(0, 1fr) minmax(110px, 1fr);
+                gap: 6px;
+                padding: 8px;
+            }}
+            .breadcrumb-nav {{
+                min-width: 0;
+                flex-wrap: nowrap;
+                gap: 5px;
+            }}
+            .breadcrumb-title {{
+                min-width: 0;
+                font-size: 12px;
+                white-space: nowrap;
+            }}
+            .btn-drilldown-back,
+            .show-all-btn {{
+                flex: 0 0 auto;
+                padding: 3px 6px;
+                font-size: 9px;
+            }}
+            .card-search-box {{
+                grid-row: auto;
+                width: 100%;
+                max-width: none;
+                min-width: 0;
+                justify-self: stretch;
+            }}
+            .card-search-box input {{
+                min-width: 0;
+                padding: 6px 24px 6px 7px;
+                font-size: 10px;
+            }}
+            .toolbar {{
+                display: grid;
+                grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+                align-items: center;
+                padding: 8px;
+                gap: 7px;
+            }}
+            .toolbar-right {{
+                display: contents;
+            }}
+            .pnl-threshold-control {{
+                grid-column: 1;
+                justify-self: start;
+                flex-wrap: nowrap;
+                gap: 3px;
+                min-width: 0;
+            }}
+            .sort-control {{
+                grid-column: 2;
+                justify-self: stretch;
+                min-width: 0;
+                gap: 3px;
+            }}
+            .performer-highlights {{
+                grid-column: 1 / -1;
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 6px;
+                min-width: 0;
+            }}
+        }}
+
+        @media (max-width: 430px) {{
+            .card-header {{
+                grid-template-columns: minmax(0, 1fr);
+                gap: 6px;
+                padding: 7px;
+            }}
+            .card-search-box {{
+                grid-row: 2;
+            }}
+            .breadcrumb-nav {{
+                gap: 3px;
+            }}
+            .breadcrumb-title {{
+                font-size: 11px;
+            }}
+            .btn-drilldown-back,
+            .show-all-btn {{
+                padding: 3px 4px;
+                font-size: 8px;
+            }}
+            .card-search-box input {{
+                font-size: 9px;
+                padding-left: 5px;
+            }}
         }}
 
         /* Fully Responsive Table Design */
@@ -1517,14 +1739,15 @@ def generate_html_report(
                         </span>
                     </label>
 
-                    <!-- Light / Dark Mode Toggle Button -->
-                    <button id="theme-toggle-btn" class="header-btn" onclick="toggleThemeMode()" title="Toggle Light / Dark mode" aria-label="Toggle theme">
-                        <span id="theme-toggle-icon">☀️</span>
-                        <span id="theme-toggle-label" class="col-hide-mobile">Light</span>
-                    </button>
+                    <div class="display-controls">
+                        <!-- Light / Dark Mode Toggle Button -->
+                        <button id="theme-toggle-btn" class="header-btn" onclick="toggleThemeMode()" title="Toggle Light / Dark mode" aria-label="Toggle theme">
+                            <span id="theme-toggle-icon">☀️</span>
+                            <span id="theme-toggle-label" class="col-hide-mobile">Light</span>
+                        </button>
 
-                    <!-- Segmented View Switcher: Table vs Graph -->
-                    <div class="view-switcher" role="tablist" aria-label="Dashboard display">
+                        <!-- Segmented View Switcher: Table vs Graph -->
+                        <div class="view-switcher" role="tablist" aria-label="Dashboard display">
                         <button id="view-btn-table" class="view-btn active" onclick="switchView('table')" title="Switch to Table View" aria-label="Switch to Table View">
                             <span class="view-btn-icon" aria-hidden="true">☷</span>
                             <span class="view-btn-label">Table</span>
@@ -1533,6 +1756,7 @@ def generate_html_report(
                             <span class="view-btn-icon" aria-hidden="true">📊</span>
                             <span class="view-btn-label">Graph</span>
                         </button>
+                        </div>
                     </div>
                 </div>
 
@@ -1576,18 +1800,17 @@ def generate_html_report(
                         aria-label="Show all tickers across themes"
                         onclick="toggleShowAllTickers()">All tickers</button>
                 </div>
-            </div>
-
-            <!-- Toolbar: Ticker Search Bar & Performer Highlights -->
-            <div class="toolbar">
-                <div class="ticker-search-box">
+                <div class="ticker-search-box card-search-box">
                     <input id="ticker-search" type="search" placeholder="Ticker/company/theme; -term excludes" title="Search ticker, description, or theme. Separate terms with spaces or commas; prefix a term with minus to exclude it." enterkeyhint="search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" role="searchbox" aria-label="Search ticker, description, or theme. Separate terms with spaces or commas; prefix a term with minus to exclude it." oninput="handleTickerSearch(this.value)">
                     <button id="search-clear-btn" class="search-clear-btn" onclick="clearTickerSearch()" title="Clear search" aria-label="Clear search">✕</button>
                 </div>
+            </div>
 
+            <!-- Toolbar: PnL threshold, sorting & performer highlights -->
+            <div class="toolbar">
                 <div class="toolbar-right">
                     <div class="pnl-threshold-control" title="Show rows where the absolute value of Net FIFO PnL matches the selected comparison">
-                        <span class="pnl-threshold-label" id="pnl-threshold-label">Show |Net|</span>
+                        <span class="pnl-threshold-label" id="pnl-threshold-label">|Net|</span>
                         <div class="threshold-mode-group" role="group" aria-labelledby="pnl-threshold-label">
                             <button id="pnl-threshold-mode-lt" class="threshold-mode-btn" type="button" aria-label="Show rows where absolute Net PnL is less than the amount" aria-pressed="false" onclick="setPnlThresholdMode('lt')">&lt;</button>
                             <button id="pnl-threshold-mode-gt" class="threshold-mode-btn" type="button" aria-label="Show rows where absolute Net PnL is greater than the amount" aria-pressed="false" onclick="setPnlThresholdMode('gt')">&gt;</button>
@@ -1600,14 +1823,22 @@ def generate_html_report(
                         <span class="sort-label">Sort:</span>
                         <div class="sort-btn-group" role="tablist">
                             <button id="sort-btn-pnl" class="sort-pill-btn active" onclick="setSort('pnl')" title="Sort by Net FIFO PnL">
-                                Net PnL <span id="sort-icon-pnl" class="sort-arrow">▼</span>
+                                <span class="sort-full-label">Net PnL</span><span class="sort-short-label">Net</span> <span id="sort-icon-pnl" class="sort-arrow">▼</span>
                             </button>
                             <button id="sort-btn-realized" class="sort-pill-btn" onclick="setSort('realized')" title="Sort by Realized PnL">
-                                Realized <span id="sort-icon-realized" class="sort-arrow"></span>
+                                <span class="sort-full-label">Realized</span><span class="sort-short-label">Real</span> <span id="sort-icon-realized" class="sort-arrow"></span>
                             </button>
                             <button id="sort-btn-unrealized" class="sort-pill-btn" onclick="setSort('unrealized')" title="Sort by Unrealized PnL">
-                                Unrealized <span id="sort-icon-unrealized" class="sort-arrow"></span>
+                                <span class="sort-full-label">Unrealized</span><span class="sort-short-label">Unreal</span> <span id="sort-icon-unrealized" class="sort-arrow"></span>
                             </button>
+                        </div>
+                        <div class="sort-mobile-control" aria-label="Sort options">
+                            <select id="sort-mobile-select" class="sort-mobile-select" aria-label="Sort metric" onchange="setSortMetric(this.value)">
+                                <option value="pnl">Net PnL</option>
+                                <option value="realized">Realized</option>
+                                <option value="unrealized">Unrealized</option>
+                            </select>
+                            <button id="sort-direction-btn" class="sort-direction-btn" type="button" aria-label="Change sort direction; currently descending" title="Reverse sort direction" onclick="toggleSortDirection()">▼</button>
                         </div>
                     </div>
 
@@ -1695,11 +1926,24 @@ def generate_html_report(
 
         function setSort(col) {{
             if (sortColumn === col) {{
-                sortDirection = sortDirection === 'desc' ? 'asc' : 'desc';
-            }} else {{
+                toggleSortDirection();
+                return;
+            }}
+            setSortMetric(col);
+        }}
+
+        function setSortMetric(col) {{
+            if (!['pnl', 'realized', 'unrealized'].includes(col)) return;
+            if (sortColumn !== col) {{
                 sortColumn = col;
                 sortDirection = 'desc';
             }}
+            updateSortControls();
+            refreshDataAndViews();
+        }}
+
+        function toggleSortDirection() {{
+            sortDirection = sortDirection === 'desc' ? 'asc' : 'desc';
             updateSortControls();
             refreshDataAndViews();
         }}
@@ -1712,6 +1956,15 @@ def generate_html_report(
                 if (btn) btn.classList.toggle('active', isActive);
                 if (icon) icon.textContent = isActive ? (sortDirection === 'asc' ? '▲' : '▼') : '';
             }});
+            const mobileSelect = document.getElementById('sort-mobile-select');
+            if (mobileSelect) mobileSelect.value = sortColumn;
+            const directionButton = document.getElementById('sort-direction-btn');
+            if (directionButton) {{
+                const ascending = sortDirection === 'asc';
+                directionButton.textContent = ascending ? '▲' : '▼';
+                directionButton.setAttribute('aria-label', `Change sort direction; currently ${{ascending ? 'ascending' : 'descending'}}`);
+                directionButton.title = `Reverse sort direction (currently ${{ascending ? 'ascending' : 'descending'}})`;
+            }}
         }}
 
         function getSortIndicator(col) {{
@@ -2127,9 +2380,9 @@ def generate_html_report(
                 const best = highlights.best;
                 html += `
                     <div class="performer-badge best" title="${{escapeHtml(best.Description || best.Theme || '')}}">
-                        <span>Best:</span>
+                        <span class="performer-label">Best:</span>
                         <strong>${{escapeHtml(labelFor(best))}}</strong>
-                        <span>(${{formatCurrency(best.TotalFifoPnl)}})</span>
+                        <span class="performer-value">(${{formatCurrency(best.TotalFifoPnl)}})</span>
                     </div>
                 `;
             }}
@@ -2138,9 +2391,9 @@ def generate_html_report(
                 const worst = highlights.worst;
                 html += `
                     <div class="performer-badge worst" title="${{escapeHtml(worst.Description || worst.Theme || '')}}">
-                        <span>Worst:</span>
+                        <span class="performer-label">Worst:</span>
                         <strong>${{escapeHtml(labelFor(worst))}}</strong>
-                        <span>(${{formatCurrency(worst.TotalFifoPnl)}})</span>
+                        <span class="performer-value">(${{formatCurrency(worst.TotalFifoPnl)}})</span>
                     </div>
                 `;
             }}

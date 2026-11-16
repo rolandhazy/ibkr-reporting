@@ -313,3 +313,34 @@ def test_header_uses_compact_navigation_and_places_view_switcher_with_global_con
     assert 'aria-label="Switch to Table View"' in source
     assert 'aria-label="Switch to Graph View"' in source
     assert '.view-btn-label {{\n                display: none;' in source
+
+
+def test_mobile_toolbar_places_search_and_compact_controls_as_requested():
+    source = SOURCE.read_text(encoding="utf-8")
+    card_header_start = source.index('<!-- Card Header: Breadcrumbs / Title -->')
+    card_header_end = source.index('<!-- Toolbar: PnL threshold, sorting & performer highlights -->')
+    card_header = source[card_header_start:card_header_end]
+    assert 'class="ticker-search-box card-search-box"' in card_header
+    assert 'id="ticker-search"' in card_header
+    assert 'id="pnl-threshold-label">|Net|</span>' in source
+    assert 'id="pnl-threshold-label">Show |Net|' not in source
+    assert '.display-controls {{' in source
+    assert 'grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);' in source
+    assert 'grid-column: 2;' in source
+    assert 'grid-template-columns: repeat(2, minmax(0, 1fr));' in source
+    assert 'class="performer-label">Best:' in source
+    assert 'class="performer-label">Worst:' in source
+
+
+def test_mobile_sort_control_shows_metric_and_separate_direction_toggle():
+    source = SOURCE.read_text(encoding="utf-8")
+    assert 'id="sort-mobile-select"' in source
+    assert 'aria-label="Sort metric"' in source
+    assert 'id="sort-direction-btn"' in source
+    assert 'onclick="toggleSortDirection()"' in source
+    assert 'function setSortMetric(col)' in source
+    assert 'function toggleSortDirection()' in source
+    assert "mobileSelect.value = sortColumn;" in source
+    assert "directionButton.textContent = ascending ? '▲' : '▼';" in source
+    assert '.sort-btn-group {{\n                display: none;' in source
+    assert '.sort-mobile-control {{\n                display: inline-flex;' in source
