@@ -119,13 +119,17 @@ The current report generator marks a record active when `abs(UnrealizedPnl) > 0.
 
 ## Test approach
 
-Use a two-layer test strategy:
+The current automated tests have two layers, both deterministic and offline:
 
-1. **Deterministic unit/data tests with pytest.** Test pure filtering, search parsing/matching, aggregation, threshold comparisons, and KPI calculations against synthetic local fixtures. Test report generation/serialization with temporary output files where appropriate. These tests must not make live IBKR requests.
-2. **Browser-level dashboard tests with Playwright.** Load a generated report using fixture data and exercise the user-facing controls and rendered results, including filter combinations, drilldown, empty results, KPI synchronization, and responsive/mobile behavior. Stub or intercept external network requests (including CDN assets) so tests remain offline and deterministic.
+1. **Pytest report-generation and serialization tests.** These exercise Python-side report data preparation and serialization using local inputs. They do not make live IBKR requests.
+2. **Deterministic dashboard selector tests.** Pytest tests run the pure JavaScript selection logic against synthetic ticker-summary fixtures using a local JavaScript runtime. These cover data-selection behavior such as filtering, search, aggregation, thresholds, KPI derivation, and empty results. They do not load the generated page, launch a browser, or interact with rendered controls.
 
-Keep test-only dependencies separate from production `requirements.txt` (for example, in a development requirements file). Pytest is present in the workspace virtual environment, but Playwright and a compatible browser runtime must be verified before browser tests are implemented. Do not download dependencies or browser binaries as part of the test suite; document any one-time local/CI setup needed.
+**Playwright browser interaction tests are future work.** When added, they should load a generated report with fixture data and verify rendered control interactions and synchronized results. They should intercept external requests so the tests remain offline and deterministic. The current suite does not verify mobile layout, graph interaction, or button behavior in a browser; those remain unverified until browser-level tests are implemented and run.
+
+Keep test-only dependencies separate from production `requirements.txt`. The current deterministic selector tests use a local JavaScript runtime and do not require launching a browser. Before implementing Playwright browser tests, verify that Playwright and a compatible browser runtime are available, document any one-time local/CI setup, and avoid downloading browser binaries as part of the test suite.
 
 ## Test expectations
 
-Tests should verify search parsing and matching, exclusion precedence, active-only behavior, overview aggregation and drilldown scope, strict threshold boundaries, each KPI's calculation and synchronization, distinct Holdings counting, and empty-result handling. Use deterministic local fixtures; dashboard tests must not require live IBKR requests.
+The current pytest suite should remain deterministic and independent of live IBKR access. Report-generation tests verify Python-side data preparation/serialization; selector tests verify pure selection logic against local fixtures, including the filtering rules specified above. These tests do not establish that browser controls, graph interactions, or responsive/mobile layouts work as rendered.
+
+Future Playwright browser tests should verify user interactions for search and threshold controls, view switching and drilldown, empty-result rendering, synchronized KPIs/table/highlights/graph, and responsive layouts. Report browser-level coverage separately from selector/unit coverage so documentation and test results do not imply that an untested UI behavior has been verified.

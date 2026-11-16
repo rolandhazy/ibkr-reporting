@@ -16,11 +16,11 @@ An automated portfolio analytics and reporting tool for **Interactive Brokers (I
   - Unmapped tickers automatically fall back to `"Other"` for easy tracking.
 - **Interactive Standalone Dashboard (`public/index.html`)**:
   - **KPI Header**: Net FIFO PnL, Realized PnL, Unrealized PnL, and Holdings.
-  - **Dynamic Visualizations**: Plotly bar charts, realized/unrealized breakdown, and net diamonds.
-  - **Deep-Dive Drilldown**: Click on any theme to inspect constituent individual tickers and their contributions.
-  - **Holdings Toggle**: Switch between currently open/active positions and complete historical performance.
-  - **Live Search & Highlights**: Quick-search tickers and review top/bottom performers instantly.
-  - **Dark / Light Mode**: Built-in modern theme switcher with persistent styling.
+  - **Dynamic Visualizations**: Plotly charts for realized, unrealized, and net PnL.
+  - **Theme and Ticker Views**: Browse theme summaries, drill into a theme, or switch to all ticker summaries.
+  - **Filtering and Search**: Search ticker, company, and theme names with inclusion/exclusion terms; filter by absolute Net PnL.
+  - **Active Holdings Filter and Highlights**: Filter according to the report's active-status heuristic and review top/bottom performers.
+  - **Dark / Light Mode**: Built-in theme switcher with persistent styling.
 - **Data Sampling for Dev & Previews**:
   - Configurable random sampling (`--sample-rate`) to test layouts, share sanitized demos, or deploy staging previews without publishing the full portfolio.
 - **Multi-Cloud CI/CD**:
@@ -54,17 +54,17 @@ ibkr-reporting/
 │       └── deploy-pages-dev.yml  # Dev preview deployment to GitHub Pages
 ├── tests/
 │   ├── test_report_generator.py  # Report generation and serialization tests
-│   └── test_dashboard_selection.py # Browser tests for dashboard selection logic
+│   └── test_dashboard_selection.py # Deterministic JavaScript selector tests
 ├── dashboard_behavior_contract.md # Dashboard filtering and KPI behavior contract
 ├── flex_client.py                # IBKR Flex API client with polling & local caching
 ├── parser.py                     # XML statement parser & portfolio sampling logic
 ├── theme_map.py                  # Ticker-to-theme mapping definitions
 ├── report_generator.py           # Dashboard generator & Plotly visualization engine
 ├── main.py                       # CLI orchestrator & pipeline entry point
-├── build_report_html.py          # Legacy/workflow entry point wrapper
+├── build_report_html.py           # Legacy/workflow entry point wrapper
 ├── wrangler.jsonc                # Cloudflare Pages/Assets configuration
 ├── requirements.txt              # Production project dependencies
-├── requirements-dev.txt           # Test-only pytest and Playwright dependencies
+├── requirements-dev.txt           # Development test dependencies
 └── .env                          # Local credentials (git-ignored)
 ```
 
@@ -178,17 +178,18 @@ python main.py --output preview.html
 
 ## Testing
 
-The test suite uses synthetic local data and does not require live IBKR requests. Pytest covers report generation and serialization; Playwright browser tests execute the dashboard's real selection pipeline for filtering, thresholding, aggregation, KPI semantics, highlights, graph data, and empty results.
+Tests use synthetic local data and do not make live IBKR requests. `test_report_generator.py` checks report aggregation, time-slice serialization, empty input, active-status derivation, and safe JSON embedding. `test_dashboard_selection.py` extracts and runs the dashboard's pure JavaScript selection logic against fixture data, covering search, filtering, aggregation, KPI semantics, highlights, graph data, and empty results.
 
-Install the development-only dependencies and the Playwright Chromium browser once, then run the tests from the repository root:
+The selector tests run with system Node.js when available. If system Node.js is unavailable, they use the Node runtime bundled with the development-only Playwright Python package. Playwright is used only as a Node runtime fallback; the current suite does **not** launch a browser. No Chromium installation is needed to run these tests.
+
+Install the development dependencies and run pytest from the repository root:
 
 ```bash
 pip install -r requirements-dev.txt
-python -m playwright install chromium
 python -m pytest
 ```
 
-These test dependencies are separate from production `requirements.txt`. Browser tests block external network requests and use local fixture data.
+Development test dependencies are separate from production `requirements.txt`. The current tests verify report generation and selection logic, but do not verify rendered button interactions, graph behavior in a browser, or responsive/mobile layout. Browser-based interaction and visual regression tests remain future work.
 
 ---
 
