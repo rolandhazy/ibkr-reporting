@@ -53,7 +53,8 @@ ibkr-reporting/
 │       ├── deploy.yml            # Production deployment to Cloudflare
 │       └── deploy-pages-dev.yml  # Dev preview deployment to GitHub Pages
 ├── tests/
-│   └── test_report_generator.py  # Report generation and serialization tests
+│   ├── test_report_generator.py  # Report generation and serialization tests
+│   └── test_dashboard_selection.py # Browser tests for dashboard selection logic
 ├── dashboard_behavior_contract.md # Dashboard filtering and KPI behavior contract
 ├── flex_client.py                # IBKR Flex API client with polling & local caching
 ├── parser.py                     # XML statement parser & portfolio sampling logic
@@ -63,6 +64,7 @@ ibkr-reporting/
 ├── build_report_html.py          # Legacy/workflow entry point wrapper
 ├── wrangler.jsonc                # Cloudflare Pages/Assets configuration
 ├── requirements.txt              # Production project dependencies
+├── requirements-dev.txt           # Test-only pytest and Playwright dependencies
 └── .env                          # Local credentials (git-ignored)
 ```
 
@@ -176,16 +178,17 @@ python main.py --output preview.html
 
 ## Testing
 
-The test suite uses synthetic local data and does not require live IBKR requests. The current pytest tests cover report generation, aggregation, and embedded-payload serialization. Dashboard interaction behaviors in the [behavior contract](dashboard_behavior_contract.md) are documented expectations; they are not all covered by automated tests yet.
+The test suite uses synthetic local data and does not require live IBKR requests. Pytest covers report generation and serialization; Playwright browser tests execute the dashboard's real selection pipeline for filtering, thresholding, aggregation, KPI semantics, highlights, graph data, and empty results.
 
-Install pytest in your active virtual environment, then run the tests from the repository root:
+Install the development-only dependencies and the Playwright Chromium browser once, then run the tests from the repository root:
 
 ```bash
-pip install pytest
+pip install -r requirements-dev.txt
+python -m playwright install chromium
 python -m pytest
 ```
 
-Pytest is a development-only dependency and is intentionally not included in `requirements.txt`.
+These test dependencies are separate from production `requirements.txt`. Browser tests block external network requests and use local fixture data.
 
 ---
 
