@@ -377,7 +377,7 @@ def generate_html_report(
             background: var(--bg-card);
             border: 1px solid var(--border-color);
             border-radius: 10px;
-            padding: 7px 16px;
+            padding: 9px 18px;
             align-items: center;
         }}
 
@@ -435,22 +435,40 @@ def generate_html_report(
             .header-controls {{
                 width: 100%;
                 justify-self: stretch;
-                flex-wrap: wrap;
-                row-gap: 6px;
+                flex-wrap: nowrap;
+                gap: 5px;
+                min-width: 0;
             }}
             .display-controls {{
                 flex-wrap: nowrap;
                 margin-left: auto;
+                gap: 4px;
             }}
             .slice-switcher {{
                 flex: 0 0 auto;
                 width: max-content;
+                gap: 0;
+                padding: 2px;
             }}
             .slice-btn {{
                 flex: 0 0 auto;
+                padding: 4px 6px;
+                font-size: 10px;
             }}
             .filter-toggle, .header-btn {{
                 flex: 0 0 auto;
+            }}
+            .filter-toggle-pill {{
+                gap: 4px;
+                padding: 4px 7px;
+                font-size: 10px;
+            }}
+            .header-btn {{
+                padding: 4px 7px;
+            }}
+            .view-btn {{
+                min-width: 30px;
+                padding: 5px 7px;
             }}
             .reporting-period {{
                 max-width: 100%;
@@ -626,40 +644,38 @@ def generate_html_report(
 
         @media (max-width: 640px) {{
             .kpi-strip {{
-                grid-template-columns: repeat(4, 1fr);
+                grid-template-columns: repeat(4, minmax(0, 1fr));
                 gap: 4px 6px;
-                padding: 6px 8px;
-                border-radius: 8px;
+                padding: 8px;
+                border-radius: 10px;
             }}
             .kpi-item {{
                 min-width: 0;
+                gap: 3px;
             }}
             .kpi-label {{
-                font-size: 8.5px !important;
-                letter-spacing: 0.01em !important;
+                font-size: clamp(8px, 2.5vw, 10px) !important;
+                letter-spacing: 0.02em !important;
                 white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
             }}
             .kpi-val {{
-                font-size: 11.5px !important;
-                letter-spacing: -0.02em;
+                font-size: clamp(10px, 3.4vw, 14px) !important;
+                letter-spacing: -0.03em;
                 white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
+                overflow: visible;
             }}
         }}
 
         @media (max-width: 400px) {{
             .kpi-strip {{
-                gap: 2px 4px;
-                padding: 5px 6px;
+                gap: 4px;
+                padding: 7px 6px;
             }}
             .kpi-label {{
-                font-size: 8px !important;
+                font-size: clamp(7px, 2.2vw, 9px) !important;
             }}
             .kpi-val {{
-                font-size: 10.5px !important;
+                font-size: clamp(9px, 3vw, 12px) !important;
             }}
         }}
 
@@ -670,16 +686,16 @@ def generate_html_report(
         }}
 
         .kpi-label {{
-            font-size: 10px;
+            font-size: 12px;
             text-transform: uppercase;
             letter-spacing: 0.05em;
-            color: var(--text-muted);
-            font-weight: 600;
+            color: var(--text-secondary);
+            font-weight: 700;
         }}
 
         .kpi-val {{
             font-family: var(--font-mono);
-            font-size: 14px;
+            font-size: 18px;
             font-weight: 700;
             font-variant-numeric: tabular-nums;
             white-space: nowrap;
@@ -710,7 +726,7 @@ def generate_html_report(
 
         .card-header {{
             background: var(--bg-card-header);
-            padding: 10px 14px;
+            padding: 14px 18px;
             border-bottom: 1px solid var(--border-color);
             display: grid;
             grid-template-columns: minmax(0, 1fr) minmax(180px, 320px);
@@ -752,7 +768,7 @@ def generate_html_report(
         }}
 
         .breadcrumb-title {{
-            font-size: 14px;
+            font-size: 16px;
             font-weight: 700;
             color: var(--text-primary);
             display: flex;
@@ -1204,27 +1220,27 @@ def generate_html_report(
 
         @media (max-width: 430px) {{
             .card-header {{
-                grid-template-columns: minmax(0, 1fr);
-                gap: 6px;
-                padding: 7px;
+                grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr);
+                gap: 8px;
+                padding: 10px;
             }}
             .card-search-box {{
-                grid-row: 2;
+                grid-row: auto;
             }}
             .breadcrumb-nav {{
                 gap: 3px;
             }}
             .breadcrumb-title {{
-                font-size: 11px;
+                font-size: 14px;
             }}
             .btn-drilldown-back,
             .show-all-btn {{
-                padding: 3px 4px;
-                font-size: 8px;
+                padding: 5px 7px;
+                font-size: 10px;
             }}
             .card-search-box input {{
-                font-size: 9px;
-                padding-left: 5px;
+                font-size: 11px;
+                padding: 7px 24px 7px 7px;
             }}
         }}
 
@@ -1710,6 +1726,93 @@ def generate_html_report(
                 scroll-behavior: auto !important;
             }}
         }}
+
+        /* Readability and compact mobile layout overrides. */
+        .kpi-strip {{
+            gap: 14px 22px;
+            padding: 12px 20px;
+        }}
+        .kpi-label {{ font-size: 13px; }}
+        .kpi-val {{ font-size: 20px; }}
+        .card-header {{ padding: 16px 20px; }}
+        .breadcrumb-title {{ font-size: 18px; }}
+        .card-search-box input {{ padding-top: 8px; padding-bottom: 8px; font-size: 13px; }}
+
+        @media (max-width: 640px) {{
+            .header-controls {{
+                display: flex;
+                flex-wrap: nowrap;
+                align-items: center;
+                width: 100%;
+                min-width: 0;
+                gap: 4px;
+            }}
+            .slice-switcher {{
+                flex: 1 1 auto;
+                width: auto;
+                min-width: 0;
+                justify-content: space-between;
+            }}
+            .slice-btn {{ flex: 1 1 0; min-width: 0; padding-left: 3px; padding-right: 3px; }}
+            .filter-toggle, .display-controls {{ flex: 0 0 auto; }}
+            .display-controls {{ margin-left: 0; gap: 3px; }}
+            .header-btn {{ min-width: 32px; justify-content: center; }}
+            .view-switcher {{ flex: 0 0 auto; }}
+            .card-header {{
+                grid-template-columns: max-content minmax(0, 1fr);
+                align-items: center;
+                gap: 8px;
+                padding: 12px;
+            }}
+            .breadcrumb-nav {{ min-width: 0; flex-wrap: nowrap; gap: 5px; }}
+            .breadcrumb-title {{ font-size: 16px; }}
+            .btn-drilldown-back, .show-all-btn {{ padding: 5px 7px; font-size: 11px; }}
+            .card-search-box {{
+                grid-row: auto;
+                min-width: 0;
+                max-width: none;
+                justify-self: stretch;
+            }}
+            .card-search-box input {{ min-width: 0; padding: 8px 24px 8px 8px; font-size: 11px; }}
+            .kpi-strip {{
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+                gap: 6px 8px;
+                padding: 10px 9px;
+            }}
+            .kpi-item {{ min-width: 0; gap: 3px; }}
+            .kpi-label {{
+                font-size: clamp(8px, 2.7vw, 11px) !important;
+                letter-spacing: 0.01em !important;
+                white-space: nowrap;
+            }}
+            .kpi-val {{
+                font-size: clamp(11px, 3.8vw, 16px) !important;
+                letter-spacing: -0.035em;
+                white-space: nowrap;
+            }}
+        }}
+
+        @media (max-width: 430px) {{
+            .header-controls {{ gap: 3px; }}
+            .filter-toggle-pill {{ gap: 4px; padding: 4px 6px; }}
+            .filter-toggle-pill > span:nth-child(2) {{ display: none; }}
+            .active-count-tag {{ font-size: 9px; padding: 1px 4px; }}
+            .display-controls {{ gap: 2px; }}
+            .view-btn {{ min-width: 29px; padding: 5px 6px; }}
+            .card-header {{
+                grid-template-columns: max-content minmax(0, 1fr);
+                gap: 6px;
+                padding: 10px;
+            }}
+            .breadcrumb-nav {{ gap: 4px; }}
+            .breadcrumb-title {{ font-size: 14px; }}
+            .btn-drilldown-back, .show-all-btn {{ padding: 4px 6px; font-size: 10px; }}
+            .card-search-box input {{ font-size: 10px; padding: 7px 22px 7px 7px; }}
+            .kpi-strip {{ gap: 5px; padding: 9px 6px; }}
+            .kpi-label {{ font-size: clamp(7px, 2.4vw, 9px) !important; }}
+            .kpi-val {{ font-size: clamp(10px, 3.5vw, 14px) !important; }}
+        }}
+
     </style>
 </head>
 <body>
@@ -2006,9 +2109,20 @@ def generate_html_report(
             ));
         }}
 
+        function formatEuroAmount(val, includeSign = false) {{
+            const numericValue = Number(val) || 0;
+            const amount = Math.round(Math.abs(numericValue)).toLocaleString('en-US', {{ maximumFractionDigits: 0 }});
+            if (!includeSign) return `€${{numericValue < 0 ? '-' : ''}}${{amount}}`;
+            return `${{numericValue >= 0 ? '+' : '-'}}€${{amount}}`;
+        }}
+
         function formatCurrency(val) {{
-            const sign = val >= 0 ? "+€" : "-€";
-            return sign + Math.abs(val).toLocaleString('en-US', {{ minimumFractionDigits: 2, maximumFractionDigits: 2 }});
+            return formatEuroAmount(val, true);
+        }}
+
+        function roundEuroValue(val) {{
+            const numericValue = Number(val) || 0;
+            return Math.sign(numericValue) * Math.round(Math.abs(numericValue));
         }}
 
         /* Win/Loss & Realized/Unrealized Ratio Component */
@@ -2026,7 +2140,7 @@ def generate_html_report(
                 const winPct = Math.round((posPart / totalGross) * 100);
                 const lossPct = 100 - winPct;
                 const ratio = (posPart / negPart).toFixed(1);
-                tooltip = `Win/Loss Ratio: ${{ratio}}x • Gains: +€${{posPart.toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}})}} (${{winPct}}%) | Drag: -€${{negPart.toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}})}} (${{lossPct}}%)`;
+                tooltip = `Win/Loss Ratio: ${{ratio}}x • Gains: +€${{posPart.toLocaleString('en-US', {{maximumFractionDigits: 0}})}} (${{winPct}}%) | Drag: -€${{negPart.toLocaleString('en-US', {{maximumFractionDigits: 0}})}} (${{lossPct}}%)`;
                 trackHtml = `
                     <div class="ratio-bar-seg" style="width: ${{winPct}}%; background: var(--color-positive);"></div>
                     <div class="ratio-bar-seg" style="width: ${{lossPct}}%; background: var(--color-negative);"></div>
@@ -2035,7 +2149,7 @@ def generate_html_report(
             }} else if (posPart > 0) {{
                 const realPct = Math.round((Math.max(0, realized) / posPart) * 100);
                 const unrealPct = 100 - realPct;
-                tooltip = `100% Gains • Realized: +€${{realized.toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}})}} (${{realPct}}%) | Unrealized: +€${{unrealized.toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}})}} (${{unrealPct}}%)`;
+                tooltip = `100% Gains • Realized: +€${{realized.toLocaleString('en-US', {{maximumFractionDigits: 0}})}} (${{realPct}}%) | Unrealized: +€${{unrealized.toLocaleString('en-US', {{maximumFractionDigits: 0}})}} (${{unrealPct}}%)`;
                 trackHtml = `
                     <div class="ratio-bar-seg" style="width: ${{realPct}}%; background: var(--color-realized-pos);"></div>
                     <div class="ratio-bar-seg" style="width: ${{unrealPct}}%; background: var(--color-unrealized-pos);"></div>
@@ -2044,7 +2158,7 @@ def generate_html_report(
             }} else if (negPart > 0) {{
                 const realPct = Math.round((Math.abs(Math.min(0, realized)) / negPart) * 100);
                 const unrealPct = 100 - realPct;
-                tooltip = `100% Loss • Realized: -€${{Math.abs(realized).toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}})}} (${{realPct}}%) | Unrealized: -€${{Math.abs(unrealized).toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}})}} (${{unrealPct}}%)`;
+                tooltip = `100% Loss • Realized: -€${{Math.abs(realized).toLocaleString('en-US', {{maximumFractionDigits: 0}})}} (${{realPct}}%) | Unrealized: -€${{Math.abs(unrealized).toLocaleString('en-US', {{maximumFractionDigits: 0}})}} (${{unrealPct}}%)`;
                 trackHtml = `
                     <div class="ratio-bar-seg" style="width: ${{realPct}}%; background: var(--color-realized-neg);"></div>
                     <div class="ratio-bar-seg" style="width: ${{unrealPct}}%; background: var(--color-unrealized-neg);"></div>
@@ -2058,7 +2172,7 @@ def generate_html_report(
 
             return `
                 <div class="pnl-cell-content" title="${{escapeHtml(tooltip)}}">
-                    <span class="pnl-amount ${{isPosTotal ? 'positive' : 'negative'}}">€${{total.toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}})}}</span>
+                    <span class="pnl-amount ${{isPosTotal ? 'positive' : 'negative'}}">€${{total.toLocaleString('en-US', {{maximumFractionDigits: 0}})}}</span>
                     <div class="ratio-container">
                         <div class="ratio-bar-track">
                             ${{trackHtml}}
@@ -2490,8 +2604,8 @@ def generate_html_report(
                             </div>
                         </td>
                         <td class="col-assets" style="text-align:center;"><span class="badge neutral" title="${{row.WinningAssets}} winning / ${{row.LosingAssets}} losing assets">${{row.AssetCount}}</span></td>
-                        <td class="num col-hide-mobile col-realized">€${{row.RealizedPnl.toLocaleString('en-US', {{ minimumFractionDigits: 2, maximumFractionDigits: 2 }})}}</td>
-                        <td class="num col-hide-mobile col-unrealized">€${{row.UnrealizedPnl.toLocaleString('en-US', {{ minimumFractionDigits: 2, maximumFractionDigits: 2 }})}}</td>
+                        <td class="num col-hide-mobile col-realized">${{formatEuroAmount(row.RealizedPnl)}}</td>
+                        <td class="num col-hide-mobile col-unrealized">${{formatEuroAmount(row.UnrealizedPnl)}}</td>
                         <td class="num col-pnl">${{ratioHtml}}</td>
                     </tr>
                 `;
@@ -2547,8 +2661,8 @@ def generate_html_report(
                         </td>
                         <td class="col-desc"><div class="subtable-desc" title="${{desc}}">${{desc}}</div></td>
                         ${{themeTag}}
-                        <td class="num col-hide-mobile col-realized">€${{t.RealizedPnl.toLocaleString('en-US', {{ minimumFractionDigits: 2, maximumFractionDigits: 2 }})}}</td>
-                        <td class="num col-hide-mobile col-unrealized">€${{t.UnrealizedPnl.toLocaleString('en-US', {{ minimumFractionDigits: 2, maximumFractionDigits: 2 }})}}</td>
+                        <td class="num col-hide-mobile col-realized">${{formatEuroAmount(t.RealizedPnl)}}</td>
+                        <td class="num col-hide-mobile col-unrealized">${{formatEuroAmount(t.UnrealizedPnl)}}</td>
                         <td class="num col-pnl">${{ratioHtml}}</td>
                     </tr>
                 `;
@@ -2585,9 +2699,9 @@ def generate_html_report(
             // Reverse for top-down descending visual hierarchy
             const dataToChart = [...graphData].reverse();
             const yNames = dataToChart.map(t => t.Theme);
-            const realized = dataToChart.map(t => t.RealizedPnl);
-            const unrealized = dataToChart.map(t => t.UnrealizedPnl);
-            const net = dataToChart.map(t => t.TotalFifoPnl);
+            const realized = dataToChart.map(t => roundEuroValue(t.RealizedPnl));
+            const unrealized = dataToChart.map(t => roundEuroValue(t.UnrealizedPnl));
+            const net = dataToChart.map(t => roundEuroValue(t.TotalFifoPnl));
 
             const isLight = document.documentElement.getAttribute('data-theme') === 'light';
             const textColor = isLight ? '#0f172a' : '#f8fafc';
@@ -2606,7 +2720,7 @@ def generate_html_report(
                     color: realized.map(v => v >= 0 ? '#16a34a' : '#dc2626'),
                     opacity: 0.85
                 }},
-                hovertemplate: '%{{y}}<br>Realized: €%{{x:,.2f}}<extra></extra>'
+                hovertemplate: '%{{y}}<br>Realized: €%{{x:,.0f}}<extra></extra>'
             }};
 
             const traceUnrealized = {{
@@ -2619,7 +2733,7 @@ def generate_html_report(
                     color: unrealized.map(v => v >= 0 ? '#4ade80' : '#f87171'),
                     opacity: 0.75
                 }},
-                hovertemplate: '%{{y}}<br>Unrealized: €%{{x:,.2f}}<extra></extra>'
+                hovertemplate: '%{{y}}<br>Unrealized: €%{{x:,.0f}}<extra></extra>'
             }};
 
             const traceNet = {{
@@ -2634,7 +2748,7 @@ def generate_html_report(
                     color: net.map(v => v >= 0 ? '#10b981' : '#f43f5e'),
                     line: {{ color: isLight ? '#ffffff' : '#0b1120', width: 1 }}
                 }},
-                hovertemplate: '%{{y}}<br><b>Net PnL: €%{{x:,.2f}}</b><extra></extra>'
+                hovertemplate: '%{{y}}<br><b>Net PnL: €%{{x:,.0f}}</b><extra></extra>'
             }};
 
             const layout = {{
@@ -2721,9 +2835,9 @@ def generate_html_report(
             // Reverse for top-down descending visual hierarchy
             const dataToChart = [...tickers].reverse();
             const yNames = dataToChart.map(t => t.UnderlyingSymbol);
-            const realized = dataToChart.map(t => t.RealizedPnl);
-            const unrealized = dataToChart.map(t => t.UnrealizedPnl);
-            const net = dataToChart.map(t => t.TotalFifoPnl);
+            const realized = dataToChart.map(t => roundEuroValue(t.RealizedPnl));
+            const unrealized = dataToChart.map(t => roundEuroValue(t.UnrealizedPnl));
+            const net = dataToChart.map(t => roundEuroValue(t.TotalFifoPnl));
 
             const isLight = document.documentElement.getAttribute('data-theme') === 'light';
             const textColor = isLight ? '#0f172a' : '#f8fafc';
@@ -2743,7 +2857,7 @@ def generate_html_report(
                     opacity: 0.85
                 }},
                 customdata: dataToChart.map(t => t.Description),
-                hovertemplate: '<b>%{{y}}</b> (%{{customdata}})<br>Realized: €%{{x:,.2f}}<extra></extra>'
+                hovertemplate: '<b>%{{y}}</b> (%{{customdata}})<br>Realized: €%{{x:,.0f}}<extra></extra>'
             }};
 
             const traceUnrealized = {{
@@ -2757,7 +2871,7 @@ def generate_html_report(
                     opacity: 0.75
                 }},
                 customdata: dataToChart.map(t => t.Description),
-                hovertemplate: '<b>%{{y}}</b> (%{{customdata}})<br>Unrealized: €%{{x:,.2f}}<extra></extra>'
+                hovertemplate: '<b>%{{y}}</b> (%{{customdata}})<br>Unrealized: €%{{x:,.0f}}<extra></extra>'
             }};
 
             const traceNet = {{
@@ -2773,7 +2887,7 @@ def generate_html_report(
                     line: {{ color: isLight ? '#ffffff' : '#0b1120', width: 1 }}
                 }},
                 customdata: dataToChart.map(t => t.Description),
-                hovertemplate: '<b>%{{y}}</b> (%{{customdata}})<br><b>Net PnL: €%{{x:,.2f}}</b><extra></extra>'
+                hovertemplate: '<b>%{{y}}</b> (%{{customdata}})<br><b>Net PnL: €%{{x:,.0f}}</b><extra></extra>'
             }};
 
             const layout = {{

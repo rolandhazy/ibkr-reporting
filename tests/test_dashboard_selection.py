@@ -344,3 +344,29 @@ def test_mobile_sort_control_shows_metric_and_separate_direction_toggle():
     assert "directionButton.textContent = ascending ? '▲' : '▼';" in source
     assert '.sort-btn-group {{\n                display: none;' in source
     assert '.sort-mobile-control {{\n                display: inline-flex;' in source
+
+
+def test_mobile_header_fits_global_controls_and_search_shares_card_header_row():
+    source = SOURCE.read_text(encoding="utf-8")
+    assert ".header-controls {{\n                display: flex;\n                flex-wrap: nowrap;" in source
+    assert ".slice-switcher {{\n                flex: 1 1 auto;" in source
+    assert ".display-controls {{ margin-left: 0; gap: 3px; }}" in source
+    assert "grid-template-columns: max-content minmax(0, 1fr);" in source
+    assert ".card-search-box {{\n                grid-row: auto;" in source
+    assert "font-size: clamp(11px, 3.8vw, 16px) !important;" in source
+    assert ".filter-toggle-pill > span:nth-child(2) {{ display: none; }}" in source
+    assert "padding: 16px 20px;" in source
+
+
+def test_monetary_display_rounds_to_whole_euros_across_dashboard_views():
+    source = SOURCE.read_text(encoding="utf-8")
+    assert "Math.round(Math.abs(numericValue))" in source
+    assert "function roundEuroValue(val)" in source
+    assert "dataToChart.map(t => roundEuroValue(t.TotalFifoPnl))" in source
+    assert "function formatCurrency(val)" in source
+    assert "formatEuroAmount(row.RealizedPnl)" in source
+    assert "formatEuroAmount(row.UnrealizedPnl)" in source
+    assert "formatEuroAmount(t.RealizedPnl)" in source
+    assert "formatEuroAmount(t.UnrealizedPnl)" in source
+    assert "%{{x:,.0f}}" in source
+    assert "%{{x:,.2f}}" not in source
