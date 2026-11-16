@@ -190,7 +190,7 @@ def generate_html_report(
         }}
 
         .container {{
-            max-width: 1280px;
+            max-width: 1560px;
             margin: 0 auto;
         }}
 
@@ -243,6 +243,13 @@ def generate_html_report(
             display: flex;
             align-items: center;
             gap: 8px;
+        }}
+
+        .display-controls {{
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            flex: 0 0 auto;
         }}
 
         /* Time Slice Segmented Switcher */
@@ -370,7 +377,7 @@ def generate_html_report(
             background: var(--bg-card);
             border: 1px solid var(--border-color);
             border-radius: 10px;
-            padding: 7px 16px;
+            padding: 9px 18px;
             align-items: center;
         }}
 
@@ -407,11 +414,11 @@ def generate_html_report(
             }}
         }}
 
-        /* Phone layout: keep controls inside the viewport while preserving the desktop/tablet layout above. */
+        /* Phone layout: keep global controls paired and compact dashboard rows. */
         @media (max-width: 640px) {{
             html, body {{
                 max-width: 100%;
-                overflow-x: hidden;
+                overflow-x: clip;
             }}
             .container, .card {{
                 width: 100%;
@@ -428,66 +435,247 @@ def generate_html_report(
             .header-controls {{
                 width: 100%;
                 justify-self: stretch;
-                flex-wrap: wrap;
-                row-gap: 6px;
+                flex-wrap: nowrap;
+                gap: 5px;
+                min-width: 0;
+            }}
+            .display-controls {{
+                flex-wrap: nowrap;
+                margin-left: auto;
+                gap: 4px;
             }}
             .slice-switcher {{
                 flex: 0 0 auto;
                 width: max-content;
+                gap: 0;
+                padding: 2px;
             }}
             .slice-btn {{
                 flex: 0 0 auto;
+                padding: 4px 6px;
+                font-size: 10px;
             }}
             .filter-toggle, .header-btn {{
                 flex: 0 0 auto;
+            }}
+            .filter-toggle-pill {{
+                gap: 4px;
+                padding: 4px 7px;
+                font-size: 10px;
+            }}
+            .header-btn {{
+                padding: 4px 7px;
+            }}
+            .view-btn {{
+                min-width: 30px;
+                padding: 5px 7px;
             }}
             .reporting-period {{
                 max-width: 100%;
                 overflow-wrap: anywhere;
             }}
-            .ticker-search-box {{
-                flex: 1 1 100%;
-                width: 100%;
+            .card-header {{
+                grid-template-columns: minmax(0, 1fr);
+                gap: 8px;
+                padding: 8px;
+            }}
+            .breadcrumb-nav {{
+                min-width: 0;
+            }}
+            .card-search-box {{
+                grid-row: 2;
                 max-width: none;
+                justify-self: stretch;
+            }}
+            .toolbar {{
+                display: grid;
+                grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+                align-items: center;
+                padding: 8px;
+                gap: 7px;
+            }}
+            .toolbar-right {{
+                display: contents;
+            }}
+            .pnl-threshold-control {{
+                grid-column: 1;
+                justify-self: start;
+                flex-wrap: nowrap;
+                gap: 3px;
+                min-width: 0;
+            }}
+            .pnl-threshold-label {{
+                font-size: 9px;
+                letter-spacing: 0;
+            }}
+            .threshold-mode-group {{
+                gap: 0;
+                padding: 1px;
+            }}
+            .threshold-mode-btn {{
+                min-width: 22px;
+                min-height: 25px;
+                padding: 2px 5px;
+            }}
+            .toolbar-number-input {{
+                width: clamp(48px, 17vw, 72px);
+                min-width: 0;
+                padding: 4px 4px;
+                font-size: 10px;
+            }}
+            .sort-control {{
+                grid-column: 2;
+                justify-self: stretch;
+                min-width: 0;
+                gap: 3px;
+            }}
+            .sort-label {{
+                display: none;
+            }}
+            .sort-control {{
+                justify-self: end;
+                width: max-content;
+                max-width: 100%;
+            }}
+            .sort-btn-group {{
+                display: none;
+            }}
+            .sort-mobile-control {{
+                display: inline-flex;
+                align-items: center;
+                min-width: 0;
+                background: var(--input-bg);
+                border: 1px solid var(--border-color);
+                border-radius: 8px;
+                padding: 2px;
+                gap: 2px;
+            }}
+            .sort-mobile-select {{
+                appearance: none;
+                min-width: 0;
+                max-width: 112px;
+                border: 0;
+                border-radius: 6px;
+                padding: 5px 18px 5px 7px;
+                color: var(--color-accent);
+                background: var(--border-color);
+                font: 700 10px var(--font-main);
+                cursor: pointer;
+                background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%);
+                background-position: calc(100% - 8px) 50%, calc(100% - 5px) 50%;
+                background-size: 3px 3px, 3px 3px;
+                background-repeat: no-repeat;
+            }}
+            .sort-direction-btn {{
+                min-width: 28px;
+                min-height: 28px;
+                border: 0;
+                border-radius: 6px;
+                background: transparent;
+                color: var(--text-secondary);
+                font: 700 12px var(--font-main);
+                cursor: pointer;
+            }}
+            .sort-direction-btn:hover {{
+                color: var(--color-accent);
+                background: var(--ratio-track-bg);
+            }}
+            .sort-direction-btn:focus-visible,
+            .sort-mobile-select:focus-visible {{
+                outline: 2px solid var(--color-accent);
+                outline-offset: 1px;
+            }}
+            .performer-highlights {{
+                grid-column: 1 / -1;
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 6px;
+                min-width: 0;
+            }}
+            .performer-badge {{
+                min-width: 0;
+                max-width: 100%;
+                overflow: hidden;
+                gap: 3px;
+                padding: 3px 5px;
+                font-size: 9px;
+            }}
+            .performer-badge strong,
+            .performer-badge .performer-label,
+            .performer-badge .performer-value {{
+                min-width: 0;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }}
+            .performer-badge strong {{
+                flex: 0 1 auto;
+            }}
+            .performer-badge .performer-value {{
+                flex: 0 1 auto;
+                white-space: nowrap;
+            }}
+        }}
+
+        @media (max-width: 380px) {{
+            .header-controls {{
+                gap: 5px;
+            }}
+            .slice-btn {{
+                padding-left: 6px;
+                padding-right: 6px;
+            }}
+            .filter-toggle-pill {{
+                gap: 4px;
+                padding: 5px 7px;
+            }}
+            .header-btn {{
+                padding: 5px 7px;
+            }}
+            .pnl-threshold-label {{
+                font-size: 8px;
+            }}
+            .toolbar-number-input {{
+                width: 48px;
+            }}
+            .performer-highlights {{
+                gap: 4px;
             }}
         }}
 
         @media (max-width: 640px) {{
             .kpi-strip {{
-                grid-template-columns: repeat(4, 1fr);
+                grid-template-columns: repeat(4, minmax(0, 1fr));
                 gap: 4px 6px;
-                padding: 6px 8px;
-                border-radius: 8px;
+                padding: 8px;
+                border-radius: 10px;
             }}
             .kpi-item {{
                 min-width: 0;
+                gap: 3px;
             }}
             .kpi-label {{
-                font-size: 8.5px !important;
-                letter-spacing: 0.01em !important;
+                font-size: clamp(8px, 2.5vw, 10px) !important;
+                letter-spacing: 0.02em !important;
                 white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
             }}
             .kpi-val {{
-                font-size: 11.5px !important;
-                letter-spacing: -0.02em;
+                font-size: clamp(10px, 3.4vw, 14px) !important;
+                letter-spacing: -0.03em;
                 white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
+                overflow: visible;
             }}
         }}
 
         @media (max-width: 400px) {{
             .kpi-strip {{
-                gap: 2px 4px;
-                padding: 5px 6px;
+                gap: 4px;
+                padding: 7px 6px;
             }}
             .kpi-label {{
-                font-size: 8px !important;
+                font-size: clamp(7px, 2.2vw, 9px) !important;
             }}
             .kpi-val {{
-                font-size: 10.5px !important;
+                font-size: clamp(9px, 3vw, 12px) !important;
             }}
         }}
 
@@ -498,16 +686,16 @@ def generate_html_report(
         }}
 
         .kpi-label {{
-            font-size: 10px;
+            font-size: 12px;
             text-transform: uppercase;
             letter-spacing: 0.05em;
-            color: var(--text-muted);
-            font-weight: 600;
+            color: var(--text-secondary);
+            font-weight: 700;
         }}
 
         .kpi-val {{
             font-family: var(--font-mono);
-            font-size: 14px;
+            font-size: 18px;
             font-weight: 700;
             font-variant-numeric: tabular-nums;
             white-space: nowrap;
@@ -538,13 +726,18 @@ def generate_html_report(
 
         .card-header {{
             background: var(--bg-card-header);
-            padding: 10px 14px;
+            padding: 14px 18px;
             border-bottom: 1px solid var(--border-color);
-            display: flex;
-            justify-content: space-between;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(180px, 320px);
             align-items: center;
             gap: 10px;
-            flex-wrap: wrap;
+        }}
+
+        .card-search-box {{
+            width: 100%;
+            max-width: 320px;
+            justify-self: end;
         }}
 
         .breadcrumb-nav {{
@@ -575,12 +768,33 @@ def generate_html_report(
         }}
 
         .breadcrumb-title {{
-            font-size: 14px;
+            font-size: 16px;
             font-weight: 700;
             color: var(--text-primary);
             display: flex;
             align-items: center;
             gap: 6px;
+        }}
+
+        .show-all-btn {{
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--color-accent);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            white-space: nowrap;
+        }}
+
+        .show-all-btn:hover, .show-all-btn[aria-pressed="true"] {{
+            background: var(--color-accent-bg);
+            border-color: var(--color-accent);
         }}
 
         /* View Switcher Segmented Control */
@@ -620,24 +834,36 @@ def generate_html_report(
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
         }}
 
+        @media (max-width: 600px) {{
+            .view-btn-label {{
+                display: none;
+            }}
+            .view-btn {{
+                justify-content: center;
+                min-width: 34px;
+                padding: 6px 9px;
+            }}
+        }}
+
         /* Secondary Toolbar: Ticker Search & Highlights */
         .toolbar {{
             display: flex;
-            justify-content: space-between;
+            justify-content: flex-start;
             align-items: center;
             padding: 8px 14px;
             background: var(--bg-card);
             border-bottom: 1px solid var(--border-subtle);
             flex-wrap: wrap;
             gap: 10px;
+            min-width: 0;
         }}
 
         .ticker-search-box {{
             display: flex;
             align-items: center;
             position: relative;
-            flex: 1 1 280px;
-            max-width: 420px;
+            flex: 0 1 320px;
+            max-width: 320px;
         }}
 
         .ticker-search-box input {{
@@ -679,8 +905,98 @@ def generate_html_report(
         .toolbar-right {{
             display: flex;
             align-items: center;
-            gap: 12px;
+            justify-content: flex-end;
+            gap: 10px 12px;
+            flex: 1 1 440px;
             flex-wrap: wrap;
+            min-width: 0;
+            max-width: 100%;
+        }}
+
+        .pnl-threshold-control {{
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            flex-wrap: wrap;
+            min-width: 0;
+        }}
+
+        .pnl-threshold-label {{
+            color: var(--text-muted);
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            white-space: nowrap;
+        }}
+
+        .toolbar-number-input {{
+            min-height: 29px;
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font: 11px var(--font-main);
+            padding: 4px 7px;
+        }}
+
+        .toolbar-number-input:focus {{
+            outline: none;
+            border-color: var(--color-accent);
+            box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.15);
+        }}
+
+        .threshold-mode-group {{
+            display: inline-flex;
+            align-items: center;
+            gap: 2px;
+            padding: 2px;
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 7px;
+        }}
+
+        .threshold-mode-btn {{
+            min-height: 25px;
+            border: 0;
+            border-radius: 5px;
+            padding: 3px 8px;
+            background: transparent;
+            color: var(--text-secondary);
+            font: 600 11px var(--font-main);
+            cursor: pointer;
+        }}
+
+        .threshold-mode-btn:hover {{
+            color: var(--text-primary);
+            background: var(--ratio-track-bg);
+        }}
+
+        .threshold-mode-btn.active {{
+            background: var(--border-color);
+            color: var(--color-accent);
+        }}
+
+        .pnl-threshold-control:not(.enabled) .toolbar-number-input {{
+            color: var(--text-muted);
+            background: var(--bg-card-header);
+            border-color: var(--border-color);
+        }}
+
+        .threshold-mode-btn:focus-visible {{
+            outline: 2px solid var(--color-accent);
+            outline-offset: 1px;
+        }}
+
+        .toolbar-number-input {{
+            width: 92px;
+            font-family: var(--font-mono);
+            font-variant-numeric: tabular-nums;
+        }}
+
+        .toolbar-eur-suffix {{
+            color: var(--text-muted);
+            font-size: 10px;
         }}
 
         /* Sort Controls */
@@ -733,6 +1049,14 @@ def generate_html_report(
             color: var(--color-accent);
             font-weight: 700;
             box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        }}
+
+        .sort-short-label {{
+            display: none;
+        }}
+
+        .sort-mobile-control {{
+            display: none;
         }}
 
         .sort-arrow {{
@@ -827,15 +1151,105 @@ def generate_html_report(
             font-weight: 700;
         }}
 
+        /* Final responsive overrides follow base component rules intentionally. */
+        @media (max-width: 640px) {{
+            .card-header {{
+                grid-template-columns: minmax(0, 1fr) minmax(110px, 1fr);
+                gap: 6px;
+                padding: 8px;
+            }}
+            .breadcrumb-nav {{
+                min-width: 0;
+                flex-wrap: nowrap;
+                gap: 5px;
+            }}
+            .breadcrumb-title {{
+                min-width: 0;
+                font-size: 12px;
+                white-space: nowrap;
+            }}
+            .btn-drilldown-back,
+            .show-all-btn {{
+                flex: 0 0 auto;
+                padding: 3px 6px;
+                font-size: 9px;
+            }}
+            .card-search-box {{
+                grid-row: auto;
+                width: 100%;
+                max-width: none;
+                min-width: 0;
+                justify-self: stretch;
+            }}
+            .card-search-box input {{
+                min-width: 0;
+                padding: 6px 24px 6px 7px;
+                font-size: 10px;
+            }}
+            .toolbar {{
+                display: grid;
+                grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+                align-items: center;
+                padding: 8px;
+                gap: 7px;
+            }}
+            .toolbar-right {{
+                display: contents;
+            }}
+            .pnl-threshold-control {{
+                grid-column: 1;
+                justify-self: start;
+                flex-wrap: nowrap;
+                gap: 3px;
+                min-width: 0;
+            }}
+            .sort-control {{
+                grid-column: 2;
+                justify-self: stretch;
+                min-width: 0;
+                gap: 3px;
+            }}
+            .performer-highlights {{
+                grid-column: 1 / -1;
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 6px;
+                min-width: 0;
+            }}
+        }}
+
+        @media (max-width: 430px) {{
+            .card-header {{
+                grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr);
+                gap: 8px;
+                padding: 10px;
+            }}
+            .card-search-box {{
+                grid-row: auto;
+            }}
+            .breadcrumb-nav {{
+                gap: 3px;
+            }}
+            .breadcrumb-title {{
+                font-size: 14px;
+            }}
+            .btn-drilldown-back,
+            .show-all-btn {{
+                padding: 5px 7px;
+                font-size: 10px;
+            }}
+            .card-search-box input {{
+                font-size: 11px;
+                padding: 7px 24px 7px 7px;
+            }}
+        }}
+
         /* Fully Responsive Table Design */
         .table-container {{
-            /* Dynamic height responding to viewport height so headers & footers stay in view */
-            max-height: clamp(380px, calc(100vh - 240px), 820px);
-            overflow-y: auto;
-            overflow-x: auto;
-            scrollbar-gutter: stable;
-            -webkit-overflow-scrolling: touch;
-            position: relative;
+            /* Use page scrolling instead of nested scrolling to prevent row/header paint overlap. */
+            max-height: none;
+            overflow: visible;
+            position: static;
             width: 100%;
         }}
 
@@ -849,15 +1263,15 @@ def generate_html_report(
         }}
 
         thead th {{
-            position: sticky;
-            top: 0;
+            position: static;
             background: var(--bg-card-header);
             color: var(--text-secondary);
             font-weight: 600;
             text-align: left;
             padding: 9px 12px;
             border-bottom: 1px solid var(--border-color);
-            z-index: 10;
+            z-index: 20;
+            background-color: var(--bg-card-header);
             font-size: 11px;
             text-transform: uppercase;
             letter-spacing: 0.03em;
@@ -1016,8 +1430,7 @@ def generate_html_report(
         }}
 
         tfoot .total-row {{
-            position: sticky;
-            bottom: 0;
+            position: static;
             z-index: 2;
             cursor: pointer;
         }}
@@ -1159,7 +1572,7 @@ def generate_html_report(
 
         .chart-wrapper {{
             width: 100%;
-            min-height: clamp(380px, calc(100vh - 300px), 720px);
+            min-height: 0;
         }}
 
         #main-chart {{
@@ -1202,9 +1615,7 @@ def generate_html_report(
         }}
 
         @media (max-width: 768px) {{
-            .table-container {{
-                max-height: clamp(340px, calc(100vh - 250px), 620px);
-            }}
+
             thead th {{
                 padding: 8px 10px;
                 font-size: 10.5px;
@@ -1229,10 +1640,7 @@ def generate_html_report(
             .col-hide-mobile {{
                 display: none !important;
             }}
-            .table-container {{
-                max-height: calc(100vh - 280px);
-                min-height: 300px;
-            }}
+
             thead th {{
                 padding: 7px 8px !important;
                 font-size: 10px !important;
@@ -1318,6 +1726,93 @@ def generate_html_report(
                 scroll-behavior: auto !important;
             }}
         }}
+
+        /* Readability and compact mobile layout overrides. */
+        .kpi-strip {{
+            gap: 14px 22px;
+            padding: 12px 20px;
+        }}
+        .kpi-label {{ font-size: 13px; }}
+        .kpi-val {{ font-size: 20px; }}
+        .card-header {{ padding: 16px 20px; }}
+        .breadcrumb-title {{ font-size: 18px; }}
+        .card-search-box input {{ padding-top: 8px; padding-bottom: 8px; font-size: 13px; }}
+
+        @media (max-width: 640px) {{
+            .header-controls {{
+                display: flex;
+                flex-wrap: nowrap;
+                align-items: center;
+                width: 100%;
+                min-width: 0;
+                gap: 4px;
+            }}
+            .slice-switcher {{
+                flex: 1 1 auto;
+                width: auto;
+                min-width: 0;
+                justify-content: space-between;
+            }}
+            .slice-btn {{ flex: 1 1 0; min-width: 0; padding-left: 3px; padding-right: 3px; }}
+            .filter-toggle, .display-controls {{ flex: 0 0 auto; }}
+            .display-controls {{ margin-left: 0; gap: 3px; }}
+            .header-btn {{ min-width: 32px; justify-content: center; }}
+            .view-switcher {{ flex: 0 0 auto; }}
+            .card-header {{
+                grid-template-columns: max-content minmax(0, 1fr);
+                align-items: center;
+                gap: 8px;
+                padding: 12px;
+            }}
+            .breadcrumb-nav {{ min-width: 0; flex-wrap: nowrap; gap: 5px; }}
+            .breadcrumb-title {{ font-size: 16px; }}
+            .btn-drilldown-back, .show-all-btn {{ padding: 5px 7px; font-size: 11px; }}
+            .card-search-box {{
+                grid-row: auto;
+                min-width: 0;
+                max-width: none;
+                justify-self: stretch;
+            }}
+            .card-search-box input {{ min-width: 0; padding: 8px 24px 8px 8px; font-size: 11px; }}
+            .kpi-strip {{
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+                gap: 6px 8px;
+                padding: 10px 9px;
+            }}
+            .kpi-item {{ min-width: 0; gap: 3px; }}
+            .kpi-label {{
+                font-size: clamp(8px, 2.7vw, 11px) !important;
+                letter-spacing: 0.01em !important;
+                white-space: nowrap;
+            }}
+            .kpi-val {{
+                font-size: clamp(11px, 3.8vw, 16px) !important;
+                letter-spacing: -0.035em;
+                white-space: nowrap;
+            }}
+        }}
+
+        @media (max-width: 430px) {{
+            .header-controls {{ gap: 3px; }}
+            .filter-toggle-pill {{ gap: 4px; padding: 4px 6px; }}
+            .filter-toggle-pill > span:nth-child(2) {{ display: none; }}
+            .active-count-tag {{ font-size: 9px; padding: 1px 4px; }}
+            .display-controls {{ gap: 2px; }}
+            .view-btn {{ min-width: 29px; padding: 5px 6px; }}
+            .card-header {{
+                grid-template-columns: max-content minmax(0, 1fr);
+                gap: 6px;
+                padding: 10px;
+            }}
+            .breadcrumb-nav {{ gap: 4px; }}
+            .breadcrumb-title {{ font-size: 14px; }}
+            .btn-drilldown-back, .show-all-btn {{ padding: 4px 6px; font-size: 10px; }}
+            .card-search-box input {{ font-size: 10px; padding: 7px 22px 7px 7px; }}
+            .kpi-strip {{ gap: 5px; padding: 9px 6px; }}
+            .kpi-label {{ font-size: clamp(7px, 2.4vw, 9px) !important; }}
+            .kpi-val {{ font-size: clamp(10px, 3.5vw, 14px) !important; }}
+        }}
+
     </style>
 </head>
 <body>
@@ -1347,11 +1842,25 @@ def generate_html_report(
                         </span>
                     </label>
 
-                    <!-- Light / Dark Mode Toggle Button -->
-                    <button id="theme-toggle-btn" class="header-btn" onclick="toggleThemeMode()" title="Toggle Light / Dark mode" aria-label="Toggle theme">
-                        <span id="theme-toggle-icon">☀️</span>
-                        <span id="theme-toggle-label" class="col-hide-mobile">Light</span>
-                    </button>
+                    <div class="display-controls">
+                        <!-- Light / Dark Mode Toggle Button -->
+                        <button id="theme-toggle-btn" class="header-btn" onclick="toggleThemeMode()" title="Toggle Light / Dark mode" aria-label="Toggle theme">
+                            <span id="theme-toggle-icon">☀️</span>
+                            <span id="theme-toggle-label" class="col-hide-mobile">Light</span>
+                        </button>
+
+                        <!-- Segmented View Switcher: Table vs Graph -->
+                        <div class="view-switcher" role="tablist" aria-label="Dashboard display">
+                        <button id="view-btn-table" class="view-btn active" onclick="switchView('table')" title="Switch to Table View" aria-label="Switch to Table View">
+                            <span class="view-btn-icon" aria-hidden="true">☷</span>
+                            <span class="view-btn-label">Table</span>
+                        </button>
+                        <button id="view-btn-graph" class="view-btn" onclick="switchView('graph')" title="Switch to Graph View" aria-label="Switch to Graph View">
+                            <span class="view-btn-icon" aria-hidden="true">📊</span>
+                            <span class="view-btn-label">Graph</span>
+                        </button>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- KPI Strip -->
@@ -1381,53 +1890,58 @@ def generate_html_report(
 
         <!-- Unified Single-View Dashboard Container -->
         <main class="card" id="dashboard-card">
-            <!-- Card Header: Breadcrumbs / Title + View Switcher -->
+            <!-- Card Header: Breadcrumbs / Title -->
             <div class="card-header">
                 <div class="breadcrumb-nav">
-                    <button id="btn-back-to-themes" class="btn-drilldown-back" onclick="drillUpToThemes()" style="display: none;" title="Return to All Themes overview">
-                        ← All Themes
+                    <button id="btn-back-to-themes" class="btn-drilldown-back" onclick="drillUpToThemes()" style="display: none;" title="Return to Themes overview">
+                        ← Themes
                     </button>
                     <div class="breadcrumb-title" id="current-view-title">
-                        <span>All Themes</span>
+                        <span>Themes</span>
                     </div>
-                    <span id="view-pnl-pill" class="badge" style="display: none;"></span>
-                    <span id="view-count-pill" class="badge neutral"></span>
+                    <button id="show-all-tickers-btn" class="show-all-btn" type="button"
+                        aria-label="Show all tickers across themes"
+                        onclick="toggleShowAllTickers()">All tickers</button>
                 </div>
-
-                <!-- Segmented View Switcher: Table vs Graph -->
-                <div class="view-switcher" role="tablist">
-                    <button id="view-btn-table" class="view-btn active" onclick="switchView('table')" title="Switch to Table View">
-                        <span>☷</span>
-                        <span>Table</span>
-                    </button>
-                    <button id="view-btn-graph" class="view-btn" onclick="switchView('graph')" title="Switch to Graph View">
-                        <span>📊</span>
-                        <span>Graph</span>
-                    </button>
+                <div class="ticker-search-box card-search-box">
+                    <input id="ticker-search" type="search" placeholder="Ticker/company/theme; -term excludes" title="Search ticker, description, or theme. Separate terms with spaces or commas; prefix a term with minus to exclude it." enterkeyhint="search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" role="searchbox" aria-label="Search ticker, description, or theme. Separate terms with spaces or commas; prefix a term with minus to exclude it." oninput="handleTickerSearch(this.value)">
+                    <button id="search-clear-btn" class="search-clear-btn" onclick="clearTickerSearch()" title="Clear search" aria-label="Clear search">✕</button>
                 </div>
             </div>
 
-            <!-- Toolbar: Ticker Search Bar & Performer Highlights -->
+            <!-- Toolbar: PnL threshold, sorting & performer highlights -->
             <div class="toolbar">
-                <div class="ticker-search-box">
-                    <input id="ticker-search" type="search" placeholder="Search ticker or company (e.g. NVDA, Airbus, Boeing)..." enterkeyhint="search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" role="searchbox" aria-label="Search ticker or company" oninput="handleTickerSearch(this.value)">
-                    <button id="search-clear-btn" class="search-clear-btn" onclick="clearTickerSearch()" title="Clear search">✕</button>
-                </div>
-
                 <div class="toolbar-right">
+                    <div class="pnl-threshold-control" title="Show rows where the absolute value of Net FIFO PnL matches the selected comparison">
+                        <span class="pnl-threshold-label" id="pnl-threshold-label">|Net|</span>
+                        <div class="threshold-mode-group" role="group" aria-labelledby="pnl-threshold-label">
+                            <button id="pnl-threshold-mode-lt" class="threshold-mode-btn" type="button" aria-label="Show rows where absolute Net PnL is less than the amount" aria-pressed="false" onclick="setPnlThresholdMode('lt')">&lt;</button>
+                            <button id="pnl-threshold-mode-gt" class="threshold-mode-btn" type="button" aria-label="Show rows where absolute Net PnL is greater than the amount" aria-pressed="false" onclick="setPnlThresholdMode('gt')">&gt;</button>
+                        </div>
+                        <input id="pnl-threshold-amount" class="toolbar-number-input" type="number" min="0" step="0.01" inputmode="decimal" value="1000" aria-label="Absolute Net PnL threshold amount in euros (EUR); choose a comparison to enable filtering" oninput="handlePnlThresholdChange()">
+                    </div>
+
                     <!-- Global Sort Control (operates across Table and Graph views) -->
                     <div class="sort-control" title="Sort themes and tickers by metric">
                         <span class="sort-label">Sort:</span>
                         <div class="sort-btn-group" role="tablist">
                             <button id="sort-btn-pnl" class="sort-pill-btn active" onclick="setSort('pnl')" title="Sort by Net FIFO PnL">
-                                Net PnL <span id="sort-icon-pnl" class="sort-arrow">▼</span>
+                                <span class="sort-full-label">Net PnL</span><span class="sort-short-label">Net</span> <span id="sort-icon-pnl" class="sort-arrow">▼</span>
                             </button>
                             <button id="sort-btn-realized" class="sort-pill-btn" onclick="setSort('realized')" title="Sort by Realized PnL">
-                                Realized <span id="sort-icon-realized" class="sort-arrow"></span>
+                                <span class="sort-full-label">Realized</span><span class="sort-short-label">Real</span> <span id="sort-icon-realized" class="sort-arrow"></span>
                             </button>
                             <button id="sort-btn-unrealized" class="sort-pill-btn" onclick="setSort('unrealized')" title="Sort by Unrealized PnL">
-                                Unrealized <span id="sort-icon-unrealized" class="sort-arrow"></span>
+                                <span class="sort-full-label">Unrealized</span><span class="sort-short-label">Unreal</span> <span id="sort-icon-unrealized" class="sort-arrow"></span>
                             </button>
+                        </div>
+                        <div class="sort-mobile-control" aria-label="Sort options">
+                            <select id="sort-mobile-select" class="sort-mobile-select" aria-label="Sort metric" onchange="setSortMetric(this.value)">
+                                <option value="pnl">Net PnL</option>
+                                <option value="realized">Realized</option>
+                                <option value="unrealized">Unrealized</option>
+                            </select>
+                            <button id="sort-direction-btn" class="sort-direction-btn" type="button" aria-label="Change sort direction; currently descending" title="Reverse sort direction" onclick="toggleSortDirection()">▼</button>
                         </div>
                     </div>
 
@@ -1438,7 +1952,7 @@ def generate_html_report(
             </div>
 
             <!-- Viewport 1: Table View -->
-            <div id="table-view-container" class="table-container" role="region" aria-label="Portfolio performance table" tabindex="0">
+            <div id="table-view-container" class="table-container" role="region" aria-label="Portfolio performance table">
                 <table id="main-table">
                     <thead id="table-head">
                         <!-- Rendered dynamically depending on level (Themes vs Tickers) -->
@@ -1446,9 +1960,7 @@ def generate_html_report(
                     <tbody id="table-body">
                         <!-- Rendered dynamically -->
                     </tbody>
-                    <tfoot id="table-foot">
-                        <!-- Rendered dynamically (Total Portfolio row at Themes level) -->
-                    </tfoot>
+                    <tfoot id="table-foot"></tfoot>
                 </table>
             </div>
 
@@ -1504,20 +2016,37 @@ def generate_html_report(
 
         // Application State
         let currentMode = 'table';         // 'table' | 'graph'
-        let drilldownTheme = null;         // null (All Themes) | string (Theme Name) | '__TOTAL__' (Total Portfolio)
+        let drilldownTheme = null;         // null (All Themes) | string (Theme Name)
+        let showAllTickers = false;        // Toggle between grouped themes and all ticker rows
         let tickerSearchQuery = '';        // Active search filter for tickers
+        let pnlThresholdMode = null;          // No comparison until the user selects 'gt' or 'lt'
+        let pnlThresholdActive = false;       // Activated by choosing either comparison mode
         let showActiveOnly = false;        // Toggle active/open positions only
         let currentThemeList = [];         // Aggregated themes list
+        let currentSelection = null;         // Canonical filtered dashboard result
         let sortColumn = 'pnl';            // 'pnl' | 'realized' | 'unrealized'
         let sortDirection = 'desc';        // 'desc' | 'asc'
 
         function setSort(col) {{
             if (sortColumn === col) {{
-                sortDirection = sortDirection === 'desc' ? 'asc' : 'desc';
-            }} else {{
+                toggleSortDirection();
+                return;
+            }}
+            setSortMetric(col);
+        }}
+
+        function setSortMetric(col) {{
+            if (!['pnl', 'realized', 'unrealized'].includes(col)) return;
+            if (sortColumn !== col) {{
                 sortColumn = col;
                 sortDirection = 'desc';
             }}
+            updateSortControls();
+            refreshDataAndViews();
+        }}
+
+        function toggleSortDirection() {{
+            sortDirection = sortDirection === 'desc' ? 'asc' : 'desc';
             updateSortControls();
             refreshDataAndViews();
         }}
@@ -1530,6 +2059,15 @@ def generate_html_report(
                 if (btn) btn.classList.toggle('active', isActive);
                 if (icon) icon.textContent = isActive ? (sortDirection === 'asc' ? '▲' : '▼') : '';
             }});
+            const mobileSelect = document.getElementById('sort-mobile-select');
+            if (mobileSelect) mobileSelect.value = sortColumn;
+            const directionButton = document.getElementById('sort-direction-btn');
+            if (directionButton) {{
+                const ascending = sortDirection === 'asc';
+                directionButton.textContent = ascending ? '▲' : '▼';
+                directionButton.setAttribute('aria-label', `Change sort direction; currently ${{ascending ? 'ascending' : 'descending'}}`);
+                directionButton.title = `Reverse sort direction (currently ${{ascending ? 'ascending' : 'descending'}})`;
+            }}
         }}
 
         function getSortIndicator(col) {{
@@ -1571,9 +2109,20 @@ def generate_html_report(
             ));
         }}
 
+        function formatEuroAmount(val, includeSign = false) {{
+            const numericValue = Number(val) || 0;
+            const amount = Math.round(Math.abs(numericValue)).toLocaleString('en-US', {{ maximumFractionDigits: 0 }});
+            if (!includeSign) return `€${{numericValue < 0 ? '-' : ''}}${{amount}}`;
+            return `${{numericValue >= 0 ? '+' : '-'}}€${{amount}}`;
+        }}
+
         function formatCurrency(val) {{
-            const sign = val >= 0 ? "+€" : "-€";
-            return sign + Math.abs(val).toLocaleString('en-US', {{ minimumFractionDigits: 2, maximumFractionDigits: 2 }});
+            return formatEuroAmount(val, true);
+        }}
+
+        function roundEuroValue(val) {{
+            const numericValue = Number(val) || 0;
+            return Math.sign(numericValue) * Math.round(Math.abs(numericValue));
         }}
 
         /* Win/Loss & Realized/Unrealized Ratio Component */
@@ -1591,7 +2140,7 @@ def generate_html_report(
                 const winPct = Math.round((posPart / totalGross) * 100);
                 const lossPct = 100 - winPct;
                 const ratio = (posPart / negPart).toFixed(1);
-                tooltip = `Win/Loss Ratio: ${{ratio}}x • Gains: +€${{posPart.toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}})}} (${{winPct}}%) | Drag: -€${{negPart.toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}})}} (${{lossPct}}%)`;
+                tooltip = `Win/Loss Ratio: ${{ratio}}x • Gains: +€${{posPart.toLocaleString('en-US', {{maximumFractionDigits: 0}})}} (${{winPct}}%) | Drag: -€${{negPart.toLocaleString('en-US', {{maximumFractionDigits: 0}})}} (${{lossPct}}%)`;
                 trackHtml = `
                     <div class="ratio-bar-seg" style="width: ${{winPct}}%; background: var(--color-positive);"></div>
                     <div class="ratio-bar-seg" style="width: ${{lossPct}}%; background: var(--color-negative);"></div>
@@ -1600,7 +2149,7 @@ def generate_html_report(
             }} else if (posPart > 0) {{
                 const realPct = Math.round((Math.max(0, realized) / posPart) * 100);
                 const unrealPct = 100 - realPct;
-                tooltip = `100% Gains • Realized: +€${{realized.toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}})}} (${{realPct}}%) | Unrealized: +€${{unrealized.toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}})}} (${{unrealPct}}%)`;
+                tooltip = `100% Gains • Realized: +€${{realized.toLocaleString('en-US', {{maximumFractionDigits: 0}})}} (${{realPct}}%) | Unrealized: +€${{unrealized.toLocaleString('en-US', {{maximumFractionDigits: 0}})}} (${{unrealPct}}%)`;
                 trackHtml = `
                     <div class="ratio-bar-seg" style="width: ${{realPct}}%; background: var(--color-realized-pos);"></div>
                     <div class="ratio-bar-seg" style="width: ${{unrealPct}}%; background: var(--color-unrealized-pos);"></div>
@@ -1609,7 +2158,7 @@ def generate_html_report(
             }} else if (negPart > 0) {{
                 const realPct = Math.round((Math.abs(Math.min(0, realized)) / negPart) * 100);
                 const unrealPct = 100 - realPct;
-                tooltip = `100% Loss • Realized: -€${{Math.abs(realized).toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}})}} (${{realPct}}%) | Unrealized: -€${{Math.abs(unrealized).toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}})}} (${{unrealPct}}%)`;
+                tooltip = `100% Loss • Realized: -€${{Math.abs(realized).toLocaleString('en-US', {{maximumFractionDigits: 0}})}} (${{realPct}}%) | Unrealized: -€${{Math.abs(unrealized).toLocaleString('en-US', {{maximumFractionDigits: 0}})}} (${{unrealPct}}%)`;
                 trackHtml = `
                     <div class="ratio-bar-seg" style="width: ${{realPct}}%; background: var(--color-realized-neg);"></div>
                     <div class="ratio-bar-seg" style="width: ${{unrealPct}}%; background: var(--color-unrealized-neg);"></div>
@@ -1623,7 +2172,7 @@ def generate_html_report(
 
             return `
                 <div class="pnl-cell-content" title="${{escapeHtml(tooltip)}}">
-                    <span class="pnl-amount ${{isPosTotal ? 'positive' : 'negative'}}">€${{total.toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}})}}</span>
+                    <span class="pnl-amount ${{isPosTotal ? 'positive' : 'negative'}}">€${{total.toLocaleString('en-US', {{maximumFractionDigits: 0}})}}</span>
                     <div class="ratio-container">
                         <div class="ratio-bar-track">
                             ${{trackHtml}}
@@ -1636,10 +2185,33 @@ def generate_html_report(
 
         /* Data Helpers */
         function getFilteredTickers() {{
-            if (showActiveOnly) {{
-                return TICKER_DATA.filter(t => t.IsActive);
-            }}
+            if (showActiveOnly) return TICKER_DATA.filter(t => t.IsActive);
             return TICKER_DATA;
+        }}
+
+        function parseSearchQuery(query) {{
+            const tokens = String(query || '').split(/[\\s,]+/).filter(Boolean);
+            const include = [];
+            const exclude = [];
+
+            tokens.forEach(token => {{
+                if (token === '-') return;
+                if (token.startsWith('-')) {{
+                    const term = token.slice(1).toLocaleLowerCase();
+                    if (term) exclude.push(term);
+                }} else {{
+                    include.push(token.toLocaleLowerCase());
+                }}
+            }});
+            return {{ include, exclude }};
+        }}
+
+        function matchesSearch(record, terms) {{
+            const fields = [record.UnderlyingSymbol, record.Description, record.Theme]
+                .map(value => String(value || '').toLocaleLowerCase());
+            const matchesTerm = term => fields.some(field => field.includes(term));
+            if (terms.exclude.some(matchesTerm)) return false;
+            return terms.include.length === 0 || terms.include.some(matchesTerm);
         }}
 
         function aggregateThemes(tickers) {{
@@ -1653,33 +2225,127 @@ def generate_html_report(
                         UnrealizedPnl: 0,
                         AssetCount: 0,
                         WinningAssets: 0,
-                        LosingAssets: 0
+                        LosingAssets: 0,
+                        Tickers: []
                     }});
                 }}
                 const item = map.get(t.Theme);
-                item.TotalFifoPnl += t.TotalFifoPnl;
-                item.RealizedPnl += t.RealizedPnl;
-                item.UnrealizedPnl += t.UnrealizedPnl;
+                item.TotalFifoPnl += Number(t.TotalFifoPnl) || 0;
+                item.RealizedPnl += Number(t.RealizedPnl) || 0;
+                item.UnrealizedPnl += Number(t.UnrealizedPnl) || 0;
                 item.AssetCount += 1;
+                item.Tickers.push(t);
                 if (t.TotalFifoPnl > 0) item.WinningAssets += 1;
                 else if (t.TotalFifoPnl < 0) item.LosingAssets += 1;
             }});
 
-            const result = Array.from(map.values()).map(item => ({{
+            return Array.from(map.values()).map(item => ({{
                 ...item,
                 TotalFifoPnl: Math.round(item.TotalFifoPnl * 100) / 100,
                 RealizedPnl: Math.round(item.RealizedPnl * 100) / 100,
                 UnrealizedPnl: Math.round(item.UnrealizedPnl * 100) / 100
             }}));
-
-            return sortItems(result);
         }}
 
-        function updateKpis(tickers) {{
-            const totalPnl = Math.round(tickers.reduce((acc, t) => acc + t.TotalFifoPnl, 0) * 100) / 100;
-            const totalRealized = Math.round(tickers.reduce((acc, t) => acc + t.RealizedPnl, 0) * 100) / 100;
-            const totalUnrealized = Math.round(tickers.reduce((acc, t) => acc + t.UnrealizedPnl, 0) * 100) / 100;
-            const totalHoldings = tickers.length;
+        // Invalid, incomplete, or negative amounts disable the threshold instead of
+        // leaving stale filter state active. Zero is a valid threshold.
+        function normalizePnlThreshold(mode, amountValue, inputValid = true) {{
+            if (!inputValid || amountValue === null || amountValue === undefined
+                || String(amountValue).trim() === '') return null;
+            const amountEUR = Number(amountValue);
+            if (!Number.isFinite(amountEUR) || amountEUR < 0) return null;
+            return {{ mode: mode === 'lt' ? 'lt' : 'gt', amountEUR }};
+        }}
+
+        // Pure selection/aggregation step: no DOM access and no input mutation.
+        function selectDashboardData({{ tickers, activeOnly, scope, searchQuery, pnlThreshold = null }}) {{
+            if (pnlThreshold) {{
+                pnlThreshold = normalizePnlThreshold(
+                    pnlThreshold.mode, pnlThreshold.amountEUR, pnlThreshold.inputValid !== false
+                );
+            }}
+            const terms = parseSearchQuery(searchQuery);
+            let eligibleTickers = [...(tickers || [])];
+
+            // 1. Active-only filter.
+            if (activeOnly) eligibleTickers = eligibleTickers.filter(t => Boolean(t.IsActive));
+
+            // 2. View scope.
+            if (scope.type === 'theme') {{
+                eligibleTickers = eligibleTickers.filter(t => t.Theme === scope.theme);
+            }}
+
+            // 3. Search ticker, description, and theme.
+            eligibleTickers = eligibleTickers.filter(t => matchesSearch(t, terms));
+
+            // 4. Aggregate only in overview; detail views keep ticker rows.
+            const displayRows = scope.type === 'overview'
+                ? aggregateThemes(eligibleTickers)
+                : [...eligibleTickers];
+
+            // 5. Optional strict absolute-Net-PnL threshold on displayed rows.
+            const visibleRows = pnlThreshold
+                ? displayRows.filter(row => {{
+                    const amount = Math.abs(Number(row.TotalFifoPnl) || 0);
+                    return pnlThreshold.mode === 'gt'
+                        ? amount > Number(pnlThreshold.amountEUR)
+                        : amount < Number(pnlThreshold.amountEUR);
+                }})
+                : displayRows;
+
+            // Overview rows represent all eligible ticker summaries in each retained theme.
+            const representedTickers = scope.type === 'overview'
+                ? visibleRows.flatMap(row => row.Tickers)
+                : visibleRows;
+            const sum = field => Math.round(representedTickers.reduce(
+                (total, ticker) => total + (Number(ticker[field]) || 0), 0
+            ) * 100) / 100;
+
+            // Highlights describe visible display rows: themes in overview, tickers in detail.
+            const sortedHighlightRows = [...visibleRows].sort(
+                (a, b) => (Number(b.TotalFifoPnl) || 0) - (Number(a.TotalFifoPnl) || 0)
+            );
+            const bestCandidate = sortedHighlightRows[0] || null;
+            const worstCandidate = sortedHighlightRows[sortedHighlightRows.length - 1] || null;
+            const highlights = {{
+                isTheme: scope.type === 'overview',
+                best: bestCandidate && Number(bestCandidate.TotalFifoPnl) > 0 ? bestCandidate : null,
+                worst: worstCandidate && Number(worstCandidate.TotalFifoPnl) < 0
+                    && worstCandidate !== bestCandidate
+                    ? worstCandidate
+                    : null
+            }};
+            const graphData = visibleRows.map(row => ({{
+                Theme: row.Theme || null,
+                UnderlyingSymbol: row.UnderlyingSymbol || null,
+                Description: row.Description || '',
+                TotalFifoPnl: Number(row.TotalFifoPnl) || 0,
+                RealizedPnl: Number(row.RealizedPnl) || 0,
+                UnrealizedPnl: Number(row.UnrealizedPnl) || 0
+            }}));
+
+            return {{
+                eligibleTickers,
+                displayRows,
+                visibleRows,
+                representedTickers,
+                kpis: {{
+                    netFifoPnl: sum('TotalFifoPnl'),
+                    realizedPnl: sum('RealizedPnl'),
+                    unrealizedPnl: sum('UnrealizedPnl'),
+                    holdings: new Set(representedTickers.map(t => t.UnderlyingSymbol)).size
+                }},
+                highlights,
+                graphData
+            }};
+        }}
+
+        function updateKpis(selection) {{
+            const kpis = selection.kpis;
+            const totalPnl = kpis.netFifoPnl;
+            const totalRealized = kpis.realizedPnl;
+            const totalUnrealized = kpis.unrealizedPnl;
+            const totalHoldings = kpis.holdings;
 
             const pnlEl = document.getElementById('kpi-net-pnl');
             pnlEl.innerText = formatCurrency(totalPnl);
@@ -1694,7 +2360,7 @@ def generate_html_report(
             unrealEl.className = "kpi-val " + (totalUnrealized >= 0 ? "positive" : "negative");
 
             const countEl = document.getElementById('kpi-holdings-count');
-            countEl.innerText = `${{totalHoldings}} Assets`;
+            countEl.innerText = `${{totalHoldings}}`;
         }}
 
         /* View Switching (Table ⇄ Graph) */
@@ -1721,12 +2387,7 @@ def generate_html_report(
             // Re-render current level (theme or ticker drilldown) synchronously in new view
             renderDashboard();
 
-            // Ensure graph dimensions are calculated cleanly after unhiding
-            if (mode === 'graph') {{
-                setTimeout(() => {{
-                    Plotly.Plots.resize('main-chart');
-                }}, 30);
-            }}
+            // Graph sizing is handled after each Plotly render completes.
         }}
 
         /* Drill-down Navigation Functions */
@@ -1735,12 +2396,14 @@ def generate_html_report(
             renderDashboard();
         }}
 
-        function drillDownToTotalPortfolio() {{
-            drilldownTheme = '__TOTAL__';
+        function toggleShowAllTickers() {{
+            showAllTickers = !showAllTickers;
+            drilldownTheme = null;
             renderDashboard();
         }}
 
         function drillUpToThemes() {{
+            showAllTickers = false;
             drilldownTheme = null;
             renderDashboard();
         }}
@@ -1753,6 +2416,53 @@ def generate_html_report(
                 clearBtn.style.display = tickerSearchQuery.length > 0 ? 'inline-block' : 'none';
             }}
             renderDashboard();
+        }}
+
+        function syncPnlThresholdModeButtons() {{
+            ['gt', 'lt'].forEach(mode => {{
+                const button = document.getElementById(`pnl-threshold-mode-${{mode}}`);
+                if (!button) return;
+                const selected = pnlThresholdActive && pnlThresholdMode === mode;
+                button.classList.toggle('active', selected);
+                button.setAttribute('aria-pressed', String(selected));
+            }});
+            const control = document.querySelector('.pnl-threshold-control');
+            if (control) control.classList.toggle('enabled', pnlThresholdActive);
+        }}
+
+        function setPnlThresholdMode(mode) {{
+            if (mode !== 'lt' && mode !== 'gt') return;
+            if (pnlThresholdActive && pnlThresholdMode === mode) {{
+                pnlThresholdMode = null;
+                pnlThresholdActive = false;
+            }} else {{
+                pnlThresholdMode = mode;
+                pnlThresholdActive = true;
+            }}
+            syncPnlThresholdModeButtons();
+            renderDashboard();
+        }}
+
+        function handlePnlThresholdChange() {{
+            const amountInput = document.getElementById('pnl-threshold-amount');
+            if (amountInput) {{
+                const valueIsEmpty = amountInput.value.trim() === '';
+                amountInput.setAttribute('aria-invalid', String(
+                    !valueIsEmpty && (!amountInput.validity.valid
+                        || normalizePnlThreshold(pnlThresholdMode, amountInput.value) === null)
+                ));
+            }}
+            renderDashboard();
+        }}
+
+        function getPnlThreshold() {{
+            const amountInput = document.getElementById('pnl-threshold-amount');
+            if (!pnlThresholdActive || !pnlThresholdMode || !amountInput) return null;
+            return normalizePnlThreshold(
+                pnlThresholdMode,
+                amountInput.value,
+                amountInput.value.trim() === '' || amountInput.validity.valid
+            );
         }}
 
         function clearTickerSearch() {{
@@ -1770,34 +2480,34 @@ def generate_html_report(
         }}
 
         /* Performer Highlights */
-        function renderPerformerHighlights(tickers) {{
+        function renderPerformerHighlights(selection) {{
+            const highlights = selection.highlights;
             const container = document.getElementById('performer-highlights');
-            if (!tickers || tickers.length === 0) {{
+            if (!highlights || (!highlights.best && !highlights.worst)) {{
                 container.innerHTML = '';
                 return;
             }}
 
-            const sortedByNet = [...tickers].sort((a, b) => b.TotalFifoPnl - a.TotalFifoPnl);
-            const best = sortedByNet[0];
-            const worst = sortedByNet[sortedByNet.length - 1];
-
             let html = '';
-            if (best && best.TotalFifoPnl > 0) {{
+            const labelFor = row => highlights.isTheme ? row.Theme : row.UnderlyingSymbol;
+            if (highlights.best) {{
+                const best = highlights.best;
                 html += `
-                    <div class="performer-badge best" title="${{escapeHtml(best.Description)}}">
-                        <span>Best:</span>
-                        <strong>${{escapeHtml(best.UnderlyingSymbol)}}</strong>
-                        <span>(${{formatCurrency(best.TotalFifoPnl)}})</span>
+                    <div class="performer-badge best" title="${{escapeHtml(best.Description || best.Theme || '')}}">
+                        <span class="performer-label">Best:</span>
+                        <strong>${{escapeHtml(labelFor(best))}}</strong>
+                        <span class="performer-value">(${{formatCurrency(best.TotalFifoPnl)}})</span>
                     </div>
                 `;
             }}
 
-            if (worst && worst.TotalFifoPnl < 0 && worst.UnderlyingSymbol !== (best && best.UnderlyingSymbol)) {{
+            if (highlights.worst) {{
+                const worst = highlights.worst;
                 html += `
-                    <div class="performer-badge worst" title="${{escapeHtml(worst.Description)}}">
-                        <span>Worst:</span>
-                        <strong>${{escapeHtml(worst.UnderlyingSymbol)}}</strong>
-                        <span>(${{formatCurrency(worst.TotalFifoPnl)}})</span>
+                    <div class="performer-badge worst" title="${{escapeHtml(worst.Description || worst.Theme || '')}}">
+                        <span class="performer-label">Worst:</span>
+                        <strong>${{escapeHtml(labelFor(worst))}}</strong>
+                        <span class="performer-value">(${{formatCurrency(worst.TotalFifoPnl)}})</span>
                     </div>
                 `;
             }}
@@ -1807,126 +2517,57 @@ def generate_html_report(
 
         /* Master Render Controller */
         function renderDashboard() {{
-            const availableTickers = getFilteredTickers();
-            const searchQ = tickerSearchQuery.toLowerCase();
-            const isSearching = searchQ.length > 0;
+            const tableContainer = document.getElementById('table-view-container');
+            if (tableContainer) tableContainer.scrollTop = 0;
+            const scope = showAllTickers
+                ? {{ type: 'portfolio' }}
+                : drilldownTheme
+                    ? {{ type: 'theme', theme: drilldownTheme }}
+                    : {{ type: 'overview' }};
+            currentSelection = selectDashboardData({{
+                tickers: TICKER_DATA,
+                activeOnly: showActiveOnly,
+                scope,
+                searchQuery: tickerSearchQuery,
+                pnlThreshold: getPnlThreshold()
+            }});
+            const selection = currentSelection;
+            updateKpis(selection);
+            renderPerformerHighlights(selection);
 
             const backBtn = document.getElementById('btn-back-to-themes');
             const titleEl = document.getElementById('current-view-title');
-            const pnlPill = document.getElementById('view-pnl-pill');
-            const countPill = document.getElementById('view-count-pill');
             const clickHint = document.getElementById('chart-click-hint');
 
-            // CASE A: Search active across entire portfolio (when not inside a specific theme)
-            if (isSearching && !drilldownTheme) {{
-                backBtn.style.display = 'inline-flex';
-                titleEl.innerHTML = `<span>Ticker Search: "${{escapeHtml(tickerSearchQuery)}}"</span>`;
-                clickHint.style.display = 'none';
+            const showAllButton = document.getElementById('show-all-tickers-btn');
+            if (scope.type === 'overview') {{
+                backBtn.style.display = 'none';
+                if (showAllButton) showAllButton.style.display = 'inline-flex';
+                titleEl.innerHTML = `<span>Themes</span>`;
+                clickHint.style.display = 'inline-flex';
 
-                let matchedTickers = availableTickers.filter(t => 
-                    t.UnderlyingSymbol.toLowerCase().includes(searchQ) ||
-                    (t.Description && t.Description.toLowerCase().includes(searchQ))
-                );
-                matchedTickers = sortItems(matchedTickers);
-
-                const totalMatchedPnl = Math.round(matchedTickers.reduce((acc, t) => acc + t.TotalFifoPnl, 0) * 100) / 100;
-                pnlPill.style.display = 'inline-flex';
-                pnlPill.innerText = "Net " + formatCurrency(totalMatchedPnl);
-                pnlPill.className = "badge " + (totalMatchedPnl >= 0 ? "positive" : "negative");
-                countPill.innerText = `${{matchedTickers.length}} Matched Tickers`;
-
-                renderPerformerHighlights(matchedTickers);
-
-                if (currentMode === 'table') {{
-                    renderTickersTable(matchedTickers, true);
-                }} else {{
-                    renderTickersGraph(matchedTickers);
-                }}
+                if (currentMode === 'table') renderThemesTable(selection);
+                else renderThemesGraph(selection);
                 return;
             }}
 
-            // CASE B: Drilled down into Total Portfolio View
-            if (drilldownTheme === '__TOTAL__') {{
-                backBtn.style.display = 'inline-flex';
-                titleEl.innerHTML = `<span>Total Portfolio Drilldown</span>`;
-                clickHint.style.display = 'none';
-
-                let tickers = [...availableTickers];
-                if (isSearching) {{
-                    tickers = tickers.filter(t => 
-                        t.UnderlyingSymbol.toLowerCase().includes(searchQ) ||
-                        (t.Description && t.Description.toLowerCase().includes(searchQ))
-                    );
-                }}
-
-                tickers = sortItems(tickers);
-                const totalPnl = Math.round(tickers.reduce((acc, t) => acc + t.TotalFifoPnl, 0) * 100) / 100;
-
-                pnlPill.style.display = 'inline-flex';
-                pnlPill.innerText = "Net " + formatCurrency(totalPnl);
-                pnlPill.className = "badge " + (totalPnl >= 0 ? "positive" : "negative");
-                countPill.innerText = `${{tickers.length}} Assets`;
-
-                renderPerformerHighlights(tickers);
-
-                if (currentMode === 'table') {{
-                    renderTickersTable(tickers, true);
-                }} else {{
-                    renderTickersGraph(tickers);
-                }}
-                return;
-            }}
-
-            // CASE C: Drilled down into a Specific Theme
-            if (drilldownTheme) {{
-                backBtn.style.display = 'inline-flex';
-                titleEl.innerHTML = `<span>${{escapeHtml(drilldownTheme)}}</span>`;
-                clickHint.style.display = 'none';
-
-                let tickers = availableTickers.filter(t => t.Theme === drilldownTheme);
-                if (isSearching) {{
-                    tickers = tickers.filter(t => 
-                        t.UnderlyingSymbol.toLowerCase().includes(searchQ) ||
-                        (t.Description && t.Description.toLowerCase().includes(searchQ))
-                    );
-                }}
-
-                tickers = sortItems(tickers);
-                const themePnl = Math.round(tickers.reduce((acc, t) => acc + t.TotalFifoPnl, 0) * 100) / 100;
-
-                pnlPill.style.display = 'inline-flex';
-                pnlPill.innerText = "Net " + formatCurrency(themePnl);
-                pnlPill.className = "badge " + (themePnl >= 0 ? "positive" : "negative");
-                countPill.innerText = `${{tickers.length}} Tickers`;
-
-                renderPerformerHighlights(tickers);
-
-                if (currentMode === 'table') {{
-                    renderTickersTable(tickers, false);
-                }} else {{
-                    renderTickersGraph(tickers);
-                }}
-                return;
-            }}
-
-            // CASE D: Level 1 - All Themes Overview
-            backBtn.style.display = 'none';
-            pnlPill.style.display = 'none';
-            titleEl.innerHTML = `<span>All Themes</span>`;
-            countPill.innerText = `${{currentThemeList.length}} Themes`;
-            clickHint.style.display = 'inline-flex';
-
-            renderPerformerHighlights(availableTickers);
-
-            if (currentMode === 'table') {{
-                renderThemesTable();
+            backBtn.style.display = 'inline-flex';
+            if (showAllButton) showAllButton.style.display = scope.type === 'portfolio' ? 'none' : 'inline-flex';
+            clickHint.style.display = 'none';
+            if (scope.type === 'portfolio') {{
+                titleEl.innerHTML = `<span>All tickers</span>`;
+                if (currentMode === 'table') renderTickersTable(selection, true);
+                else renderTickersGraph(selection);
             }} else {{
-                renderThemesGraph();
+                titleEl.innerHTML = `<span>${{escapeHtml(drilldownTheme)}}</span>`;
+                if (currentMode === 'table') renderTickersTable(selection, false);
+                else renderTickersGraph(selection);
             }}
         }}
 
         /* Table Rendering: Themes Overview */
-        function renderThemesTable() {{
+        function renderThemesTable(selection) {{
+            const themeRows = sortItems(selection.visibleRows);
             const thead = document.getElementById('table-head');
             const tbody = document.getElementById('table-body');
             const tfoot = document.getElementById('table-foot');
@@ -1941,14 +2582,14 @@ def generate_html_report(
                 </tr>
             `;
 
-            if (currentThemeList.length === 0) {{
+            if (!themeRows || themeRows.length === 0) {{
                 tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--text-muted); padding:28px 10px;">No themes found.</td></tr>`;
                 tfoot.innerHTML = '';
                 return;
             }}
 
             let rowsHtml = '';
-            currentThemeList.forEach(row => {{
+            themeRows.forEach(row => {{
                 const pnl = row.TotalFifoPnl;
                 const indicatorColor = pnl >= 0 ? "var(--color-positive)" : "var(--color-negative)";
                 const ratioHtml = renderRatioBar(row.RealizedPnl, row.UnrealizedPnl, pnl);
@@ -1963,41 +2604,20 @@ def generate_html_report(
                             </div>
                         </td>
                         <td class="col-assets" style="text-align:center;"><span class="badge neutral" title="${{row.WinningAssets}} winning / ${{row.LosingAssets}} losing assets">${{row.AssetCount}}</span></td>
-                        <td class="num col-hide-mobile col-realized">€${{row.RealizedPnl.toLocaleString('en-US', {{ minimumFractionDigits: 2, maximumFractionDigits: 2 }})}}</td>
-                        <td class="num col-hide-mobile col-unrealized">€${{row.UnrealizedPnl.toLocaleString('en-US', {{ minimumFractionDigits: 2, maximumFractionDigits: 2 }})}}</td>
+                        <td class="num col-hide-mobile col-realized">${{formatEuroAmount(row.RealizedPnl)}}</td>
+                        <td class="num col-hide-mobile col-unrealized">${{formatEuroAmount(row.UnrealizedPnl)}}</td>
                         <td class="num col-pnl">${{ratioHtml}}</td>
                     </tr>
                 `;
             }});
             tbody.innerHTML = rowsHtml;
 
-            // Render Total Portfolio row in Footer
-            const availableTickers = getFilteredTickers();
-            const totalPnl = Math.round(availableTickers.reduce((acc, t) => acc + t.TotalFifoPnl, 0) * 100) / 100;
-            const totalRealized = Math.round(availableTickers.reduce((acc, t) => acc + t.RealizedPnl, 0) * 100) / 100;
-            const totalUnrealized = Math.round(availableTickers.reduce((acc, t) => acc + t.UnrealizedPnl, 0) * 100) / 100;
-            const totalAssets = availableTickers.length;
-            const ratioHtmlTotal = renderRatioBar(totalRealized, totalUnrealized, totalPnl);
-
-            tfoot.innerHTML = `
-                <tr class="total-row" onclick="drillDownToTotalPortfolio()" title="Click to view all individual tickers in the portfolio">
-                    <td class="col-theme">
-                        <div class="theme-name-cell" style="font-weight: 700;">
-                            <span class="theme-indicator" style="background: var(--color-accent);"></span>
-                            <span>Total Portfolio</span>
-                            <span class="drilldown-hint">View All Tickers →</span>
-                        </div>
-                    </td>
-                    <td class="col-assets" style="text-align:center;"><span class="badge neutral" style="font-weight: 700;">${{totalAssets}}</span></td>
-                    <td class="num col-hide-mobile col-realized" style="font-weight: 700;">€${{totalRealized.toLocaleString('en-US', {{ minimumFractionDigits: 2, maximumFractionDigits: 2 }})}}</td>
-                    <td class="num col-hide-mobile col-unrealized" style="font-weight: 700;">€${{totalUnrealized.toLocaleString('en-US', {{ minimumFractionDigits: 2, maximumFractionDigits: 2 }})}}</td>
-                    <td class="num col-pnl" style="font-weight: 700;">${{ratioHtmlTotal}}</td>
-                </tr>
-            `;
+            tfoot.innerHTML = '';
         }}
 
         /* Table Rendering: Ticker Drilldown */
-        function renderTickersTable(tickers, showThemeColumn = false) {{
+        function renderTickersTable(selection, showThemeColumn = false) {{
+            const tickers = sortItems(selection.visibleRows);
             const thead = document.getElementById('table-head');
             const tbody = document.getElementById('table-body');
             const tfoot = document.getElementById('table-foot');
@@ -2041,8 +2661,8 @@ def generate_html_report(
                         </td>
                         <td class="col-desc"><div class="subtable-desc" title="${{desc}}">${{desc}}</div></td>
                         ${{themeTag}}
-                        <td class="num col-hide-mobile col-realized">€${{t.RealizedPnl.toLocaleString('en-US', {{ minimumFractionDigits: 2, maximumFractionDigits: 2 }})}}</td>
-                        <td class="num col-hide-mobile col-unrealized">€${{t.UnrealizedPnl.toLocaleString('en-US', {{ minimumFractionDigits: 2, maximumFractionDigits: 2 }})}}</td>
+                        <td class="num col-hide-mobile col-realized">${{formatEuroAmount(t.RealizedPnl)}}</td>
+                        <td class="num col-hide-mobile col-unrealized">${{formatEuroAmount(t.UnrealizedPnl)}}</td>
                         <td class="num col-pnl">${{ratioHtml}}</td>
                     </tr>
                 `;
@@ -2051,23 +2671,37 @@ def generate_html_report(
             tbody.innerHTML = rowsHtml;
         }}
 
+        function renderPlotlyChart(container, traces, layout, config) {{
+            const renderPromise = container.classList.contains('js-plotly-plot')
+                ? Plotly.react(container, traces, layout, config)
+                : Plotly.newPlot(container, traces, layout, config);
+            return renderPromise.then(() => {{
+                if (container.isConnected && container.classList.contains('js-plotly-plot')) {{
+                    Plotly.Plots.resize(container);
+                }}
+            }});
+        }}
+
         /* Graph Rendering: Themes Overview */
-        function renderThemesGraph() {{
+        function renderThemesGraph(selection) {{
             if (currentMode !== 'graph') return;
+            const graphData = sortItems(selection.graphData);
             const container = document.getElementById('main-chart');
 
-            if (!currentThemeList || currentThemeList.length === 0) {{
-                Plotly.purge(container);
+            if (!graphData || graphData.length === 0) {{
+                if (window.Plotly) Plotly.purge(container);
                 container.innerHTML = '<div style="color: var(--text-muted); padding: 40px; text-align: center; font-size: 13px;">No themes data to display.</div>';
                 return;
             }}
 
+            // Preserve Plotly's existing DOM so updated filter data can be rendered.
+
             // Reverse for top-down descending visual hierarchy
-            const dataToChart = [...currentThemeList].reverse();
+            const dataToChart = [...graphData].reverse();
             const yNames = dataToChart.map(t => t.Theme);
-            const realized = dataToChart.map(t => t.RealizedPnl);
-            const unrealized = dataToChart.map(t => t.UnrealizedPnl);
-            const net = dataToChart.map(t => t.TotalFifoPnl);
+            const realized = dataToChart.map(t => roundEuroValue(t.RealizedPnl));
+            const unrealized = dataToChart.map(t => roundEuroValue(t.UnrealizedPnl));
+            const net = dataToChart.map(t => roundEuroValue(t.TotalFifoPnl));
 
             const isLight = document.documentElement.getAttribute('data-theme') === 'light';
             const textColor = isLight ? '#0f172a' : '#f8fafc';
@@ -2086,7 +2720,7 @@ def generate_html_report(
                     color: realized.map(v => v >= 0 ? '#16a34a' : '#dc2626'),
                     opacity: 0.85
                 }},
-                hovertemplate: '%{{y}}<br>Realized: €%{{x:,.2f}}<extra></extra>'
+                hovertemplate: '%{{y}}<br>Realized: €%{{x:,.0f}}<extra></extra>'
             }};
 
             const traceUnrealized = {{
@@ -2099,7 +2733,7 @@ def generate_html_report(
                     color: unrealized.map(v => v >= 0 ? '#4ade80' : '#f87171'),
                     opacity: 0.75
                 }},
-                hovertemplate: '%{{y}}<br>Unrealized: €%{{x:,.2f}}<extra></extra>'
+                hovertemplate: '%{{y}}<br>Unrealized: €%{{x:,.0f}}<extra></extra>'
             }};
 
             const traceNet = {{
@@ -2114,7 +2748,7 @@ def generate_html_report(
                     color: net.map(v => v >= 0 ? '#10b981' : '#f43f5e'),
                     line: {{ color: isLight ? '#ffffff' : '#0b1120', width: 1 }}
                 }},
-                hovertemplate: '%{{y}}<br><b>Net PnL: €%{{x:,.2f}}</b><extra></extra>'
+                hovertemplate: '%{{y}}<br><b>Net PnL: €%{{x:,.0f}}</b><extra></extra>'
             }};
 
             const layout = {{
@@ -2150,7 +2784,7 @@ def generate_html_report(
                 displayModeBar: false
             }};
 
-            Plotly.react(container, [traceRealized, traceUnrealized, traceNet], layout, config).then(() => {{
+            renderPlotlyChart(container, [traceRealized, traceUnrealized, traceNet], layout, config).then(() => {{
                 // Make theme labels (y-axis tick texts) direct click & touch drilldown triggers
                 const yTicks = container.querySelectorAll('.ytick text');
                 yTicks.forEach(tick => {{
@@ -2185,22 +2819,25 @@ def generate_html_report(
         }}
 
         /* Graph Rendering: Ticker Drilldown */
-        function renderTickersGraph(tickers) {{
+        function renderTickersGraph(selection) {{
             if (currentMode !== 'graph') return;
+            const tickers = sortItems(selection.graphData);
             const container = document.getElementById('main-chart');
 
             if (!tickers || tickers.length === 0) {{
-                Plotly.purge(container);
+                if (window.Plotly) Plotly.purge(container);
                 container.innerHTML = '<div style="color: var(--text-muted); padding: 40px; text-align: center; font-size: 13px;">No tickers data to display.</div>';
                 return;
             }}
 
+            // Preserve Plotly's existing DOM so updated filter data can be rendered.
+
             // Reverse for top-down descending visual hierarchy
             const dataToChart = [...tickers].reverse();
             const yNames = dataToChart.map(t => t.UnderlyingSymbol);
-            const realized = dataToChart.map(t => t.RealizedPnl);
-            const unrealized = dataToChart.map(t => t.UnrealizedPnl);
-            const net = dataToChart.map(t => t.TotalFifoPnl);
+            const realized = dataToChart.map(t => roundEuroValue(t.RealizedPnl));
+            const unrealized = dataToChart.map(t => roundEuroValue(t.UnrealizedPnl));
+            const net = dataToChart.map(t => roundEuroValue(t.TotalFifoPnl));
 
             const isLight = document.documentElement.getAttribute('data-theme') === 'light';
             const textColor = isLight ? '#0f172a' : '#f8fafc';
@@ -2220,7 +2857,7 @@ def generate_html_report(
                     opacity: 0.85
                 }},
                 customdata: dataToChart.map(t => t.Description),
-                hovertemplate: '<b>%{{y}}</b> (%{{customdata}})<br>Realized: €%{{x:,.2f}}<extra></extra>'
+                hovertemplate: '<b>%{{y}}</b> (%{{customdata}})<br>Realized: €%{{x:,.0f}}<extra></extra>'
             }};
 
             const traceUnrealized = {{
@@ -2234,7 +2871,7 @@ def generate_html_report(
                     opacity: 0.75
                 }},
                 customdata: dataToChart.map(t => t.Description),
-                hovertemplate: '<b>%{{y}}</b> (%{{customdata}})<br>Unrealized: €%{{x:,.2f}}<extra></extra>'
+                hovertemplate: '<b>%{{y}}</b> (%{{customdata}})<br>Unrealized: €%{{x:,.0f}}<extra></extra>'
             }};
 
             const traceNet = {{
@@ -2250,7 +2887,7 @@ def generate_html_report(
                     line: {{ color: isLight ? '#ffffff' : '#0b1120', width: 1 }}
                 }},
                 customdata: dataToChart.map(t => t.Description),
-                hovertemplate: '<b>%{{y}}</b> (%{{customdata}})<br><b>Net PnL: €%{{x:,.2f}}</b><extra></extra>'
+                hovertemplate: '<b>%{{y}}</b> (%{{customdata}})<br><b>Net PnL: €%{{x:,.0f}}</b><extra></extra>'
             }};
 
             const layout = {{
@@ -2286,7 +2923,7 @@ def generate_html_report(
                 displayModeBar: false
             }};
 
-            Plotly.react(container, [traceRealized, traceUnrealized, traceNet], layout, config).then(() => {{
+            renderPlotlyChart(container, [traceRealized, traceUnrealized, traceNet], layout, config).then(() => {{
                 if (container.removeAllListeners) {{
                     container.removeAllListeners('plotly_click');
                 }}
@@ -2341,21 +2978,10 @@ def generate_html_report(
 
         /* Master Refresh Function */
         function refreshDataAndViews() {{
-            const availableTickers = getFilteredTickers();
-            currentThemeList = aggregateThemes(availableTickers);
-            updateKpis(availableTickers);
-
             const activeCountTag = document.getElementById('active-count-tag');
             if (activeCountTag) {{
                 activeCountTag.innerText = TICKER_DATA.filter(t => t.IsActive).length;
             }}
-
-            // If selected theme no longer exists under current filter, reset to overview
-            if (drilldownTheme && drilldownTheme !== '__TOTAL__') {{
-                const exists = currentThemeList.some(t => t.Theme === drilldownTheme);
-                if (!exists) drilldownTheme = null;
-            }}
-
             renderDashboard();
         }}
 
