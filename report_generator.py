@@ -697,6 +697,17 @@ def generate_html_report(
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
         }}
 
+        @media (max-width: 600px) {{
+            .view-btn-label {{
+                display: none;
+            }}
+            .view-btn {{
+                justify-content: center;
+                min-width: 34px;
+                padding: 6px 9px;
+            }}
+        }}
+
         /* Secondary Toolbar: Ticker Search & Highlights */
         .toolbar {{
             display: flex;
@@ -1511,6 +1522,18 @@ def generate_html_report(
                         <span id="theme-toggle-icon">☀️</span>
                         <span id="theme-toggle-label" class="col-hide-mobile">Light</span>
                     </button>
+
+                    <!-- Segmented View Switcher: Table vs Graph -->
+                    <div class="view-switcher" role="tablist" aria-label="Dashboard display">
+                        <button id="view-btn-table" class="view-btn active" onclick="switchView('table')" title="Switch to Table View" aria-label="Switch to Table View">
+                            <span class="view-btn-icon" aria-hidden="true">☷</span>
+                            <span class="view-btn-label">Table</span>
+                        </button>
+                        <button id="view-btn-graph" class="view-btn" onclick="switchView('graph')" title="Switch to Graph View" aria-label="Switch to Graph View">
+                            <span class="view-btn-icon" aria-hidden="true">📊</span>
+                            <span class="view-btn-label">Graph</span>
+                        </button>
+                    </div>
                 </div>
 
                 <!-- KPI Strip -->
@@ -1540,32 +1563,18 @@ def generate_html_report(
 
         <!-- Unified Single-View Dashboard Container -->
         <main class="card" id="dashboard-card">
-            <!-- Card Header: Breadcrumbs / Title + View Switcher -->
+            <!-- Card Header: Breadcrumbs / Title -->
             <div class="card-header">
                 <div class="breadcrumb-nav">
-                    <button id="btn-back-to-themes" class="btn-drilldown-back" onclick="drillUpToThemes()" style="display: none;" title="Return to All Themes overview">
-                        ← All Themes
+                    <button id="btn-back-to-themes" class="btn-drilldown-back" onclick="drillUpToThemes()" style="display: none;" title="Return to Themes overview">
+                        ← Themes
                     </button>
                     <div class="breadcrumb-title" id="current-view-title">
-                        <span>All Themes</span>
+                        <span>Themes</span>
                     </div>
                     <button id="show-all-tickers-btn" class="show-all-btn" type="button"
                         aria-label="Show all tickers across themes"
-                        onclick="toggleShowAllTickers()">Show all</button>
-                    <span id="view-pnl-pill" class="badge" style="display: none;"></span>
-                    <span id="view-count-pill" class="badge neutral"></span>
-                </div>
-
-                <!-- Segmented View Switcher: Table vs Graph -->
-                <div class="view-switcher" role="tablist">
-                    <button id="view-btn-table" class="view-btn active" onclick="switchView('table')" title="Switch to Table View">
-                        <span>☷</span>
-                        <span>Table</span>
-                    </button>
-                    <button id="view-btn-graph" class="view-btn" onclick="switchView('graph')" title="Switch to Graph View">
-                        <span>📊</span>
-                        <span>Graph</span>
-                    </button>
+                        onclick="toggleShowAllTickers()">All tickers</button>
                 </div>
             </div>
 
@@ -2161,18 +2170,13 @@ def generate_html_report(
 
             const backBtn = document.getElementById('btn-back-to-themes');
             const titleEl = document.getElementById('current-view-title');
-            const pnlPill = document.getElementById('view-pnl-pill');
-            const countPill = document.getElementById('view-count-pill');
             const clickHint = document.getElementById('chart-click-hint');
-            const visibleCount = selection.visibleRows.length;
 
             const showAllButton = document.getElementById('show-all-tickers-btn');
             if (scope.type === 'overview') {{
                 backBtn.style.display = 'none';
                 if (showAllButton) showAllButton.style.display = 'inline-flex';
-                pnlPill.style.display = 'none';
-                titleEl.innerHTML = `<span>All Themes</span>`;
-                countPill.innerText = `${{visibleCount}} Themes`;
+                titleEl.innerHTML = `<span>Themes</span>`;
                 clickHint.style.display = 'inline-flex';
 
                 if (currentMode === 'table') renderThemesTable(selection);
@@ -2183,19 +2187,12 @@ def generate_html_report(
             backBtn.style.display = 'inline-flex';
             if (showAllButton) showAllButton.style.display = scope.type === 'portfolio' ? 'none' : 'inline-flex';
             clickHint.style.display = 'none';
-            const totalPnl = selection.kpis.netFifoPnl;
-            pnlPill.style.display = 'inline-flex';
-            pnlPill.innerText = "Net " + formatCurrency(totalPnl);
-            pnlPill.className = "badge " + (totalPnl >= 0 ? "positive" : "negative");
-
             if (scope.type === 'portfolio') {{
-                titleEl.innerHTML = `<span>All Tickers</span>`;
-                countPill.innerText = `${{visibleCount}} Tickers`;
+                titleEl.innerHTML = `<span>All tickers</span>`;
                 if (currentMode === 'table') renderTickersTable(selection, true);
                 else renderTickersGraph(selection);
             }} else {{
                 titleEl.innerHTML = `<span>${{escapeHtml(drilldownTheme)}}</span>`;
-                countPill.innerText = `${{visibleCount}} Tickers`;
                 if (currentMode === 'table') renderTickersTable(selection, false);
                 else renderTickersGraph(selection);
             }}

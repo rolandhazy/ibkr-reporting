@@ -295,3 +295,21 @@ def test_show_all_toggle_uses_portfolio_scope_and_removes_total_row():
     assert "drillDownToTotalPortfolio" not in source
     assert "<span>Total Portfolio</span>" not in source
     assert "Total Portfolio Drilldown" not in source
+
+
+def test_header_uses_compact_navigation_and_places_view_switcher_with_global_controls():
+    source = SOURCE.read_text(encoding="utf-8")
+    assert "← Themes" in source
+    assert "<span>Themes</span>" in source
+    assert 'onclick="toggleShowAllTickers()">All tickers</button>' in source
+    assert 'id="view-pnl-pill"' not in source
+    assert 'id="view-count-pill"' not in source
+    theme_toggle = source.index('id="theme-toggle-btn"')
+    view_switcher = source.index('class="view-switcher"')
+    card_header = source.index('class="card-header"')
+    assert theme_toggle < view_switcher < card_header
+    assert 'class="view-btn-label">Table</span>' in source
+    assert 'class="view-btn-label">Graph</span>' in source
+    assert 'aria-label="Switch to Table View"' in source
+    assert 'aria-label="Switch to Graph View"' in source
+    assert '.view-btn-label {{\n                display: none;' in source
