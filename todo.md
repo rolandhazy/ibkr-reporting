@@ -22,19 +22,19 @@
 - [x] Rebalance the filter toolbar for mobile layouts and improve graph resizing.
 - [x] Use page scrolling for the table instead of a nested table scroller.
 
+### KPIs and summary layout
+- [X] Remove the redundant Net PnL and ticker-count badges beside the theme/view title.
+
 ## Remaining
 
 ### Table usability
 
 - [ ] On table view, show the full ticker or theme name on hover (for truncated content).
-- [ ] Reorder overview and ticker table columns so Net PnL appears before Realized and Unrealized; keep header and row columns aligned.
-- [ ] On narrow screens, make the visible table metric follow the selected sort metric.
 
 ### KPIs and summary layout
 
 - [ ] Verify that the top KPI summaries update correctly during theme drilldown and all-tickers view.
 - [ ] Make the top-level summary stay visible while scrolling, without reintroducing table/header overlap or preventing page scrolling.
-- [ ] Remove the redundant Net PnL and ticker-count badges beside the theme/view title.
 
 ### Attribution graph
 
