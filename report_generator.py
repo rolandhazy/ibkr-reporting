@@ -1580,13 +1580,13 @@ def generate_html_report(
         }}
 
         /* Clickable Theme Labels in Graph View */
-        #main-chart .ytick text {{
+        #main-chart.is-theme-overview .ytick text {{
             cursor: pointer !important;
             pointer-events: all !important;
             transition: fill 0.15s ease, font-weight 0.15s ease;
         }}
 
-        #main-chart .ytick text:hover {{
+        #main-chart.is-theme-overview .ytick text:hover {{
             fill: var(--color-accent) !important;
             font-weight: 700 !important;
             text-decoration: underline;
@@ -2689,10 +2689,13 @@ def generate_html_report(
             const container = document.getElementById('main-chart');
 
             if (!graphData || graphData.length === 0) {{
+                container.classList.remove('is-theme-overview');
                 if (window.Plotly) Plotly.purge(container);
                 container.innerHTML = '<div style="color: var(--text-muted); padding: 40px; text-align: center; font-size: 13px;">No themes data to display.</div>';
                 return;
             }}
+
+            container.classList.add('is-theme-overview');
 
             // Preserve Plotly's existing DOM so updated filter data can be rendered.
 
@@ -2751,26 +2754,56 @@ def generate_html_report(
                 hovertemplate: '%{{y}}<br><b>Net PnL: €%{{x:,.0f}}</b><extra></extra>'
             }};
 
+            const showTopAxis = dataToChart.length > 20;
+            const traces = [traceRealized, traceUnrealized, traceNet];
+            if (showTopAxis) {{
+                traces.push({{
+                    x: [0],
+                    y: [yNames[0]],
+                    xaxis: 'x2',
+                    type: 'scatter',
+                    mode: 'markers',
+                    marker: {{ opacity: 0, size: 0 }},
+                    hoverinfo: 'skip',
+                    showlegend: false
+                }});
+            }}
+
+            const xAxisBase = {{
+                gridcolor: gridColor,
+                zerolinecolor: isLight ? '#94a3b8' : '#475569',
+                zerolinewidth: 1.5,
+                tickfont: {{ color: textColor, family: 'JetBrains Mono', size: isMobile ? 9 : 10 }},
+                tickprefix: '€',
+                tickformat: ',.0f'
+            }};
+
             const layout = {{
                 barmode: 'relative',
                 autosize: true,
-                height: Math.max(isMobile ? 440 : 480, dataToChart.length * (isMobile ? 26 : 30) + 70),
-                margin: {{ l: leftMargin, r: rightMargin, t: 15, b: 30 }},
+                height: Math.max(isMobile ? 440 : 480, dataToChart.length * (isMobile ? 26 : 30) + (showTopAxis ? 90 : 70)),
+                margin: {{ l: leftMargin, r: rightMargin, t: showTopAxis ? 32 : 15, b: 30 }},
                 paper_bgcolor: 'transparent',
                 plot_bgcolor: 'transparent',
                 font: {{ family: 'Inter', color: textColor, size: 11 }},
                 showlegend: false,
-                xaxis: {{
-                    gridcolor: gridColor,
-                    zerolinecolor: isLight ? '#94a3b8' : '#475569',
-                    zerolinewidth: 1.5,
-                    tickfont: {{ color: textColor, family: 'JetBrains Mono', size: isMobile ? 9 : 10 }},
-                    tickprefix: '€',
-                    tickformat: ',.0f'
-                }},
+                xaxis: xAxisBase,
+                ...(showTopAxis ? {{
+                    xaxis2: {{
+                        ...xAxisBase,
+                        overlaying: 'x',
+                        side: 'top',
+                        matches: 'x',
+                        showgrid: false,
+                        zeroline: false
+                    }}
+                }} : {{}}),
                 yaxis: {{
                     tickfont: {{ color: textColor, family: 'JetBrains Mono', size: isMobile ? 10 : 11, weight: 600 }},
-                    automargin: true
+                    automargin: true,
+                    autorange: false,
+                    range: [-0.6, dataToChart.length - 0.4],
+                    fixedrange: true
                 }},
                 hoverlabel: {{
                     bgcolor: isLight ? '#ffffff' : '#1e293b',
@@ -2784,7 +2817,7 @@ def generate_html_report(
                 displayModeBar: false
             }};
 
-            renderPlotlyChart(container, [traceRealized, traceUnrealized, traceNet], layout, config).then(() => {{
+            renderPlotlyChart(container, traces, layout, config).then(() => {{
                 // Make theme labels (y-axis tick texts) direct click & touch drilldown triggers
                 const yTicks = container.querySelectorAll('.ytick text');
                 yTicks.forEach(tick => {{
@@ -2824,6 +2857,7 @@ def generate_html_report(
             const tickers = sortItems(selection.graphData);
             const container = document.getElementById('main-chart');
 
+            container.classList.remove('is-theme-overview');
             if (!tickers || tickers.length === 0) {{
                 if (window.Plotly) Plotly.purge(container);
                 container.innerHTML = '<div style="color: var(--text-muted); padding: 40px; text-align: center; font-size: 13px;">No tickers data to display.</div>';
@@ -2890,26 +2924,56 @@ def generate_html_report(
                 hovertemplate: '<b>%{{y}}</b> (%{{customdata}})<br><b>Net PnL: €%{{x:,.0f}}</b><extra></extra>'
             }};
 
+            const showTopAxis = dataToChart.length > 20;
+            const traces = [traceRealized, traceUnrealized, traceNet];
+            if (showTopAxis) {{
+                traces.push({{
+                    x: [0],
+                    y: [yNames[0]],
+                    xaxis: 'x2',
+                    type: 'scatter',
+                    mode: 'markers',
+                    marker: {{ opacity: 0, size: 0 }},
+                    hoverinfo: 'skip',
+                    showlegend: false
+                }});
+            }}
+
+            const xAxisBase = {{
+                gridcolor: gridColor,
+                zerolinecolor: isLight ? '#94a3b8' : '#475569',
+                zerolinewidth: 1.5,
+                tickfont: {{ color: textColor, family: 'JetBrains Mono', size: isMobile ? 9 : 10 }},
+                tickprefix: '€',
+                tickformat: ',.0f'
+            }};
+
             const layout = {{
                 barmode: 'relative',
                 autosize: true,
-                height: Math.max(isMobile ? 440 : 480, dataToChart.length * (isMobile ? 26 : 30) + 70),
-                margin: {{ l: leftMargin, r: rightMargin, t: 15, b: 30 }},
+                height: Math.max(isMobile ? 440 : 480, dataToChart.length * (isMobile ? 26 : 30) + (showTopAxis ? 90 : 70)),
+                margin: {{ l: leftMargin, r: rightMargin, t: showTopAxis ? 32 : 15, b: 30 }},
                 paper_bgcolor: 'transparent',
                 plot_bgcolor: 'transparent',
                 font: {{ family: 'Inter', color: textColor, size: 11 }},
                 showlegend: false,
-                xaxis: {{
-                    gridcolor: gridColor,
-                    zerolinecolor: isLight ? '#94a3b8' : '#475569',
-                    zerolinewidth: 1.5,
-                    tickfont: {{ color: textColor, family: 'JetBrains Mono', size: isMobile ? 9 : 10 }},
-                    tickprefix: '€',
-                    tickformat: ',.0f'
-                }},
+                xaxis: xAxisBase,
+                ...(showTopAxis ? {{
+                    xaxis2: {{
+                        ...xAxisBase,
+                        overlaying: 'x',
+                        side: 'top',
+                        matches: 'x',
+                        showgrid: false,
+                        zeroline: false
+                    }}
+                }} : {{}}),
                 yaxis: {{
                     tickfont: {{ color: textColor, family: 'JetBrains Mono', size: isMobile ? 10 : 11, weight: 600 }},
-                    automargin: true
+                    automargin: true,
+                    autorange: false,
+                    range: [-0.6, dataToChart.length - 0.4],
+                    fixedrange: true
                 }},
                 hoverlabel: {{
                     bgcolor: isLight ? '#ffffff' : '#1e293b',
@@ -2923,7 +2987,7 @@ def generate_html_report(
                 displayModeBar: false
             }};
 
-            renderPlotlyChart(container, [traceRealized, traceUnrealized, traceNet], layout, config).then(() => {{
+            renderPlotlyChart(container, traces, layout, config).then(() => {{
                 if (container.removeAllListeners) {{
                     container.removeAllListeners('plotly_click');
                 }}
