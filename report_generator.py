@@ -2682,35 +2682,41 @@ def generate_html_report(
             }});
         }}
 
-        /* Graph Rendering: Themes Overview */
-        function renderThemesGraph(selection) {{
-            if (currentMode !== 'graph') return;
-            const graphData = sortItems(selection.graphData);
-            const container = document.getElementById('main-chart');
+        /* Shared Plotly Horizontal PnL Bar + Net Diamond Chart */
+        function renderPnlBarChart(container, rows, options) {{
+            const {{
+                emptyMessage,
+                isThemeOverview,
+                getYName,
+                desktopLeftMargin,
+                mobileLeftMargin,
+                includeDescription,
+                onRendered
+            }} = options;
 
-            if (!graphData || graphData.length === 0) {{
+            if (!rows || rows.length === 0) {{
                 container.classList.remove('is-theme-overview');
                 if (window.Plotly) Plotly.purge(container);
-                container.innerHTML = '<div style="color: var(--text-muted); padding: 40px; text-align: center; font-size: 13px;">No themes data to display.</div>';
+                container.innerHTML = `<div style="color: var(--text-muted); padding: 40px; text-align: center; font-size: 13px;">${{emptyMessage}}</div>`;
                 return;
             }}
 
-            container.classList.add('is-theme-overview');
-
-            // Preserve Plotly's existing DOM so updated filter data can be rendered.
+            container.classList.toggle('is-theme-overview', Boolean(isThemeOverview));
 
             // Reverse for top-down descending visual hierarchy
-            const dataToChart = [...graphData].reverse();
-            const yNames = dataToChart.map(t => t.Theme);
+            const dataToChart = [...rows].reverse();
+            const yNames = dataToChart.map(getYName);
             const realized = dataToChart.map(t => roundEuroValue(t.RealizedPnl));
             const unrealized = dataToChart.map(t => roundEuroValue(t.UnrealizedPnl));
             const net = dataToChart.map(t => roundEuroValue(t.TotalFifoPnl));
+            const customdata = includeDescription ? dataToChart.map(t => t.Description) : undefined;
+            const hoverPrefix = includeDescription ? '<b>%{{y}}</b> (%{{customdata}})' : '%{{y}}';
 
             const isLight = document.documentElement.getAttribute('data-theme') === 'light';
             const textColor = isLight ? '#0f172a' : '#f8fafc';
             const gridColor = isLight ? '#e2e8f0' : '#1e293b';
             const isMobile = window.innerWidth <= 640;
-            const leftMargin = isMobile ? 70 : 85;
+            const leftMargin = isMobile ? mobileLeftMargin : desktopLeftMargin;
             const rightMargin = isMobile ? 12 : 25;
 
             const traceRealized = {{
@@ -2723,7 +2729,8 @@ def generate_html_report(
                     color: realized.map(v => v >= 0 ? '#16a34a' : '#dc2626'),
                     opacity: 0.85
                 }},
-                hovertemplate: '%{{y}}<br>Realized: €%{{x:,.0f}}<extra></extra>'
+                ...(customdata ? {{ customdata }} : {{}}),
+                hovertemplate: `${{hoverPrefix}}<br>Realized: €%{{x:,.0f}}<extra></extra>`
             }};
 
             const traceUnrealized = {{
@@ -2736,7 +2743,8 @@ def generate_html_report(
                     color: unrealized.map(v => v >= 0 ? '#4ade80' : '#f87171'),
                     opacity: 0.75
                 }},
-                hovertemplate: '%{{y}}<br>Unrealized: €%{{x:,.0f}}<extra></extra>'
+                ...(customdata ? {{ customdata }} : {{}}),
+                hovertemplate: `${{hoverPrefix}}<br>Unrealized: €%{{x:,.0f}}<extra></extra>`
             }};
 
             const traceNet = {{
@@ -2751,12 +2759,14 @@ def generate_html_report(
                     color: net.map(v => v >= 0 ? '#10b981' : '#f43f5e'),
                     line: {{ color: isLight ? '#ffffff' : '#0b1120', width: 1 }}
                 }},
-                hovertemplate: '%{{y}}<br><b>Net PnL: €%{{x:,.0f}}</b><extra></extra>'
+                ...(customdata ? {{ customdata }} : {{}}),
+                hovertemplate: `${{hoverPrefix}}<br><b>Net PnL: €%{{x:,.0f}}</b><extra></extra>`
             }};
 
-            const showTopAxis = dataToChart.length > 20;
+            // Always show top x-axis; keep bottom x-axis only for >= 10 rows
+            const showBottomAxis = dataToChart.length >= 10;
             const traces = [traceRealized, traceUnrealized, traceNet];
-            if (showTopAxis) {{
+            if (showBottomAxis) {{
                 traces.push({{
                     x: [0],
                     y: [yNames[0]],
@@ -2781,14 +2791,14 @@ def generate_html_report(
             const layout = {{
                 barmode: 'relative',
                 autosize: true,
-                height: Math.max(isMobile ? 440 : 480, dataToChart.length * (isMobile ? 26 : 30) + (showTopAxis ? 90 : 70)),
-                margin: {{ l: leftMargin, r: rightMargin, t: showTopAxis ? 32 : 15, b: 30 }},
+                height: Math.max(isMobile ? 440 : 480, dataToChart.length * (isMobile ? 26 : 30) + (showBottomAxis ? 90 : 70)),
+                margin: {{ l: leftMargin, r: rightMargin, t: 32, b: showBottomAxis ? 30 : 14 }},
                 paper_bgcolor: 'transparent',
                 plot_bgcolor: 'transparent',
                 font: {{ family: 'Inter', color: textColor, size: 11 }},
                 showlegend: false,
-                xaxis: xAxisBase,
-                ...(showTopAxis ? {{
+                xaxis: showBottomAxis ? xAxisBase : {{ ...xAxisBase, side: 'top' }},
+                ...(showBottomAxis ? {{
                     xaxis2: {{
                         ...xAxisBase,
                         overlaying: 'x',
@@ -2818,36 +2828,55 @@ def generate_html_report(
             }};
 
             renderPlotlyChart(container, traces, layout, config).then(() => {{
-                // Make theme labels (y-axis tick texts) direct click & touch drilldown triggers
-                const yTicks = container.querySelectorAll('.ytick text');
-                yTicks.forEach(tick => {{
-                    tick.style.cursor = 'pointer';
-                    tick.style.pointerEvents = 'all';
-                    
-                    const handleThemeClick = (e) => {{
-                        e.stopPropagation();
-                        e.preventDefault();
-                        const themeName = tick.textContent.trim();
-                        if (themeName) {{
-                            drillDownToTheme(themeName);
-                        }}
-                    }};
+                if (onRendered) onRendered(container);
+            }});
+        }}
 
-                    tick.onclick = handleThemeClick;
-                    tick.ontouchend = handleThemeClick;
-                }});
+        /* Graph Rendering: Themes Overview */
+        function renderThemesGraph(selection) {{
+            if (currentMode !== 'graph') return;
+            const graphData = sortItems(selection.graphData);
+            const container = document.getElementById('main-chart');
 
-                // Also support clicking the bars as secondary trigger
-                if (container.removeAllListeners) {{
-                    container.removeAllListeners('plotly_click');
-                }}
-                container.on('plotly_click', (data) => {{
-                    if (!data || !data.points || data.points.length === 0) return;
-                    const clickedTheme = data.points[0].y;
-                    if (clickedTheme) {{
-                        drillDownToTheme(clickedTheme);
+            renderPnlBarChart(container, graphData, {{
+                emptyMessage: 'No themes data to display.',
+                isThemeOverview: true,
+                getYName: t => t.Theme,
+                desktopLeftMargin: 85,
+                mobileLeftMargin: 70,
+                includeDescription: false,
+                onRendered: (el) => {{
+                    // Make theme labels (y-axis tick texts) direct click & touch drilldown triggers
+                    const yTicks = el.querySelectorAll('.ytick text');
+                    yTicks.forEach(tick => {{
+                        tick.style.cursor = 'pointer';
+                        tick.style.pointerEvents = 'all';
+
+                        const handleThemeClick = (e) => {{
+                            e.stopPropagation();
+                            e.preventDefault();
+                            const themeName = tick.textContent.trim();
+                            if (themeName) {{
+                                drillDownToTheme(themeName);
+                            }}
+                        }};
+
+                        tick.onclick = handleThemeClick;
+                        tick.ontouchend = handleThemeClick;
+                    }});
+
+                    // Also support clicking the bars as secondary trigger
+                    if (el.removeAllListeners) {{
+                        el.removeAllListeners('plotly_click');
                     }}
-                }});
+                    el.on('plotly_click', (data) => {{
+                        if (!data || !data.points || data.points.length === 0) return;
+                        const clickedTheme = data.points[0].y;
+                        if (clickedTheme) {{
+                            drillDownToTheme(clickedTheme);
+                        }}
+                    }});
+                }}
             }});
         }}
 
@@ -2857,139 +2886,17 @@ def generate_html_report(
             const tickers = sortItems(selection.graphData);
             const container = document.getElementById('main-chart');
 
-            container.classList.remove('is-theme-overview');
-            if (!tickers || tickers.length === 0) {{
-                if (window.Plotly) Plotly.purge(container);
-                container.innerHTML = '<div style="color: var(--text-muted); padding: 40px; text-align: center; font-size: 13px;">No tickers data to display.</div>';
-                return;
-            }}
-
-            // Preserve Plotly's existing DOM so updated filter data can be rendered.
-
-            // Reverse for top-down descending visual hierarchy
-            const dataToChart = [...tickers].reverse();
-            const yNames = dataToChart.map(t => t.UnderlyingSymbol);
-            const realized = dataToChart.map(t => roundEuroValue(t.RealizedPnl));
-            const unrealized = dataToChart.map(t => roundEuroValue(t.UnrealizedPnl));
-            const net = dataToChart.map(t => roundEuroValue(t.TotalFifoPnl));
-
-            const isLight = document.documentElement.getAttribute('data-theme') === 'light';
-            const textColor = isLight ? '#0f172a' : '#f8fafc';
-            const gridColor = isLight ? '#e2e8f0' : '#1e293b';
-            const isMobile = window.innerWidth <= 640;
-            const leftMargin = isMobile ? 50 : 68;
-            const rightMargin = isMobile ? 12 : 25;
-
-            const traceRealized = {{
-                x: realized,
-                y: yNames,
-                name: 'Realized PnL',
-                type: 'bar',
-                orientation: 'h',
-                marker: {{
-                    color: realized.map(v => v >= 0 ? '#16a34a' : '#dc2626'),
-                    opacity: 0.85
-                }},
-                customdata: dataToChart.map(t => t.Description),
-                hovertemplate: '<b>%{{y}}</b> (%{{customdata}})<br>Realized: €%{{x:,.0f}}<extra></extra>'
-            }};
-
-            const traceUnrealized = {{
-                x: unrealized,
-                y: yNames,
-                name: 'Unrealized PnL',
-                type: 'bar',
-                orientation: 'h',
-                marker: {{
-                    color: unrealized.map(v => v >= 0 ? '#4ade80' : '#f87171'),
-                    opacity: 0.75
-                }},
-                customdata: dataToChart.map(t => t.Description),
-                hovertemplate: '<b>%{{y}}</b> (%{{customdata}})<br>Unrealized: €%{{x:,.0f}}<extra></extra>'
-            }};
-
-            const traceNet = {{
-                x: net,
-                y: yNames,
-                name: 'Net PnL',
-                type: 'scatter',
-                mode: 'markers',
-                marker: {{
-                    symbol: 'diamond',
-                    size: 8,
-                    color: net.map(v => v >= 0 ? '#10b981' : '#f43f5e'),
-                    line: {{ color: isLight ? '#ffffff' : '#0b1120', width: 1 }}
-                }},
-                customdata: dataToChart.map(t => t.Description),
-                hovertemplate: '<b>%{{y}}</b> (%{{customdata}})<br><b>Net PnL: €%{{x:,.0f}}</b><extra></extra>'
-            }};
-
-            const showTopAxis = dataToChart.length > 20;
-            const traces = [traceRealized, traceUnrealized, traceNet];
-            if (showTopAxis) {{
-                traces.push({{
-                    x: [0],
-                    y: [yNames[0]],
-                    xaxis: 'x2',
-                    type: 'scatter',
-                    mode: 'markers',
-                    marker: {{ opacity: 0, size: 0 }},
-                    hoverinfo: 'skip',
-                    showlegend: false
-                }});
-            }}
-
-            const xAxisBase = {{
-                gridcolor: gridColor,
-                zerolinecolor: isLight ? '#94a3b8' : '#475569',
-                zerolinewidth: 1.5,
-                tickfont: {{ color: textColor, family: 'JetBrains Mono', size: isMobile ? 9 : 10 }},
-                tickprefix: '€',
-                tickformat: ',.0f'
-            }};
-
-            const layout = {{
-                barmode: 'relative',
-                autosize: true,
-                height: Math.max(isMobile ? 440 : 480, dataToChart.length * (isMobile ? 26 : 30) + (showTopAxis ? 90 : 70)),
-                margin: {{ l: leftMargin, r: rightMargin, t: showTopAxis ? 32 : 15, b: 30 }},
-                paper_bgcolor: 'transparent',
-                plot_bgcolor: 'transparent',
-                font: {{ family: 'Inter', color: textColor, size: 11 }},
-                showlegend: false,
-                xaxis: xAxisBase,
-                ...(showTopAxis ? {{
-                    xaxis2: {{
-                        ...xAxisBase,
-                        overlaying: 'x',
-                        side: 'top',
-                        matches: 'x',
-                        showgrid: false,
-                        zeroline: false
+            renderPnlBarChart(container, tickers, {{
+                emptyMessage: 'No tickers data to display.',
+                isThemeOverview: false,
+                getYName: t => t.UnderlyingSymbol,
+                desktopLeftMargin: 68,
+                mobileLeftMargin: 50,
+                includeDescription: true,
+                onRendered: (el) => {{
+                    if (el.removeAllListeners) {{
+                        el.removeAllListeners('plotly_click');
                     }}
-                }} : {{}}),
-                yaxis: {{
-                    tickfont: {{ color: textColor, family: 'JetBrains Mono', size: isMobile ? 10 : 11, weight: 600 }},
-                    automargin: true,
-                    autorange: false,
-                    range: [-0.6, dataToChart.length - 0.4],
-                    fixedrange: true
-                }},
-                hoverlabel: {{
-                    bgcolor: isLight ? '#ffffff' : '#1e293b',
-                    bordercolor: isLight ? '#cbd5e1' : '#334155',
-                    font: {{ color: textColor, family: 'JetBrains Mono', size: 11 }}
-                }}
-            }};
-
-            const config = {{
-                responsive: true,
-                displayModeBar: false
-            }};
-
-            renderPlotlyChart(container, traces, layout, config).then(() => {{
-                if (container.removeAllListeners) {{
-                    container.removeAllListeners('plotly_click');
                 }}
             }});
         }}
