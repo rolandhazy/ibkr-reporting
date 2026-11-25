@@ -227,11 +227,7 @@ jobs:
                       body_lines.append(f"- {clean_commit_desc(desc)} (`{sha}`)")
                   body_lines.append("")
 
-          # Append changelog link
-          body_lines.append("---")
-          body_lines.append(f"**Full Changelog**: https://github.com/{repo}/compare/{latest_tag}...{next_version}")
-
-          release_body = "\n".join(body_lines)
+          release_body = "\n".join(body_lines).strip()
           print("=== DRAFT RELEASE PREVIEW ===")
           print(f"Tag:   {next_version}")
           print(f"Title: {release_title}")
